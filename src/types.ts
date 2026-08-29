@@ -5,21 +5,41 @@ export interface UserProfile {
   photoURL: string | null;
 }
 
-export type JournalMood = 'Peaceful' | 'Energized' | 'Grateful' | 'Contemplative' | 'Challenged' | 'Anxious' | 'Inspired';
+export type JournalMood = 
+  | 'Calm'
+  | 'Reflective'
+  | 'Inspired'
+  | 'Grateful'
+  | 'Energized'
+  | 'Challenged'
+  | 'Low'
+  | 'Frustrated'
+  | 'Anxious';
 
 export type JournalCategory = 
   | 'Daily Reflection'
-  | 'Deep Brainstorming'
+  | 'Life & Growth'
+  | 'Career & Projects'
   | 'Mindfulness & Gratitude'
-  | 'Goal Setting & Strategy'
-  | 'Emotional Processing'
+  | 'Emotional Clarity'
+  | 'Relationships'
   | 'Creative Ideas';
 
 export type AIPersona = 
-  | 'Empathetic Coach'
   | 'Socratic Explorer'
-  | 'Strategic Brainstormer'
-  | 'Summarizer & Synthesizer';
+  | 'Empathetic Listener'
+  | 'Pattern Finder'
+  | 'Practical Coach';
+
+export interface PersonaDetails {
+  id: AIPersona;
+  name: string;
+  tagline: string;
+  description: string;
+  badge: string;
+  iconName: string;
+  color: string;
+}
 
 export interface ChatMessage {
   id: string;
@@ -27,6 +47,36 @@ export interface ChatMessage {
   content: string;
   timestamp: string;
   modelUsed?: string;
+}
+
+export interface ActionItem {
+  id: string;
+  userId: string;
+  entryId?: string;
+  title: string;
+  priority: 'low' | 'medium' | 'high';
+  dueDate?: string;
+  completed: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EmotionalTheme {
+  theme: string;
+  score: number; // 0 - 100 percentage
+  description?: string;
+}
+
+export interface ExecutiveInsight {
+  id: string;
+  userId: string;
+  entryId?: string;
+  summary: string;
+  emotionalThemes: EmotionalTheme[];
+  observedPatterns: string[];
+  suggestedActions: string[];
+  deepQuestion?: string;
+  createdAt: string;
 }
 
 export interface JournalEntry {
@@ -40,6 +90,36 @@ export interface JournalEntry {
   messages: ChatMessage[];
   summary?: string;
   summaryModelUsed?: string;
+  executiveInsight?: {
+    summary: string;
+    themes: EmotionalTheme[];
+    patterns: string[];
+    actions: string[];
+    deepQuestion?: string;
+  };
   createdAt: string;
   updatedAt: string;
+}
+
+export interface UserPreferences {
+  theme: 'light' | 'dark' | 'system';
+  defaultPersona: AIPersona;
+  defaultMood: JournalMood;
+  reduceMotion: boolean;
+  autoSaveIntervalMs: number;
+}
+
+export type ActiveTab = 
+  | 'dashboard'
+  | 'journal'
+  | 'reflections'
+  | 'insights'
+  | 'inspire'
+  | 'settings';
+
+export interface ToastMessage {
+  id: string;
+  type: 'success' | 'info' | 'warning' | 'error';
+  title: string;
+  message?: string;
 }

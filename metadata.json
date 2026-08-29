@@ -1,6 +1,6 @@
 {
   "name": "Gemini Journal & Reflections",
-  "description": "User-authenticated personal journaling and multi-turn AI reflection dashboard with isolated Cloud Firestore persistence and Gemini 3.6 Flash.",
+  "description": "User-authenticated personal journaling and cognitive AI reflection platform with isolated Cloud Firestore persistence and multi-turn Gemini reasoning.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

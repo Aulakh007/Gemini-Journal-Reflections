@@ -9,9 +9,17 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
-// 1. Top-Level Request Deserialization (Ordering Guarantee)
+// 1. Top-Level Request Deserialization & Defensive Middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Security & Caching Headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  next();
+});
 
 // Lazy Google GenAI Client
 let genAIInstance: GoogleGenAI | null = null;
@@ -26,12 +34,12 @@ function getGenAI(): GoogleGenAI {
   return genAIInstance;
 }
 
-// Resilient Model Fallback Ladder
+// Resilient Model Fallback Ladder using valid public Gemini models
 const MODEL_FALLBACK_LADDER = [
-  'gemini-3.6-flash',
-  'gemini-3.1-flash-lite',
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
   'gemini-flash-latest',
-  'gemini-3.7-flash',
+  'gemini-2.5-pro',
 ];
 
 interface GenAIContentParam {
@@ -61,7 +69,6 @@ async function generateContentWithFallback(params: GenAIContentParam): Promise<{
       const errMsg = err?.message || String(err);
       console.warn(`[Gemini Fallback] Model ${model} failed: ${errMsg}`);
       errors.push({ model, error: errMsg });
-      // Continue to next model in the fallback ladder
     }
   }
 
@@ -70,49 +77,98 @@ async function generateContentWithFallback(params: GenAIContentParam): Promise<{
 
 // API Health Check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({
+    success: true,
+    data: { status: 'healthy', timestamp: new Date().toISOString() },
+    error: null,
+  });
 });
 
-// Multi-turn Reflection and Chat with Gemini
+// Multi-turn Reflection Dialogue with Gemini
 app.post('/api/gemini/reflect', async (req, res) => {
   try {
     const body = (req.body && typeof req.body === 'object') ? req.body : {};
     const {
       journalTitle = '',
       journalContent = '',
-      category = 'General Reflection',
-      mood = 'Neutral',
+      category = 'Daily Reflection',
+      mood = 'Reflective',
       conversation = [],
-      persona = 'Empathetic Coach',
+      persona = 'Socratic Explorer',
       userPrompt = '',
     } = body;
 
     const personaInstructions: Record<string, string> = {
-      'Empathetic Coach': 'You are an empathetic, insightful mindfulness and personal growth coach. You listen deeply, validate feelings, identify strengths, and ask gentle reflective questions.',
-      'Socratic Explorer': 'You are a thoughtful Socratic thinking partner. You challenge assumptions with curiosity, offer new perspectives, and encourage deep critical inquiry.',
-      'Strategic Brainstormer': 'You are a structured, innovative brainstorming partner. You synthesize concepts into practical action steps, organize ideas, and spark creative possibilities.',
-      'Summarizer & Synthesizer': 'You are an executive summarizer. You capture key themes, emotional nuance, core lessons, and actionable takeaways with crystal clarity.',
+      'Socratic Explorer': `You are the Socratic Explorer in ReflectAI.
+Your purpose is to help the user uncover underlying assumptions, see blind spots, and expand their perspective by asking thoughtful, curious, non-judgmental questions.
+Keep your response structured, warm, and concise.
+Whenever helpful, use the following clean layout:
+### 👁️ Observation
+(1-2 sentences noticing what stands out without judgment)
+
+### 💭 A Question to Consider
+(1-2 powerful, open-ended reflective questions)
+
+### 👣 Possible Next Step
+(A gentle suggestion or perspective experiment)`,
+
+      'Empathetic Listener': `You are the Empathetic Listener in ReflectAI.
+Your purpose is to help the user slow down, process emotions, feel genuinely heard, and cultivate self-compassion.
+Validate feelings with sincerity, identify emotional strengths, and avoid rushing into premature problem-solving.
+Structure:
+### 🌿 Empathetic Reflection
+(Warm validation of their experience and feelings)
+
+### 💭 Gentle Inquiry
+(A question that helps them explore how they are caring for themselves)
+
+### 🕊️ Compassionate Reminder
+(A grounding affirmation or mindful breath suggestion)`,
+
+      'Pattern Finder': `You are the Pattern Finder in ReflectAI.
+Your purpose is to connect dots, identify recurring cognitive or behavioral themes, and highlight tendencies or triggers.
+Use balanced, non-dogmatic language like "A recurring theme appears to be...", "You may be noticing...", "One possible connection is...".
+Structure:
+### 🔍 Observed Pattern
+(Clear, respectful synthesis of connections or themes)
+
+### 💭 Pattern Reflection
+(A question exploring what drives this pattern or what purpose it serves)
+
+### 🔄 Habit Shift
+(A practical way to test or reframe this pattern)`,
+
+      'Practical Coach': `You are the Practical Coach in ReflectAI.
+Your purpose is to turn reflection into realistic, high-leverage micro-actions without causing overwhelm.
+Break complex thoughts into grounded, actionable momentum.
+Structure:
+### 🎯 Clarity Focus
+(Summarize the core priority or challenge)
+
+### ⚡ 2-3 Realistic Micro-Steps
+(Direct, bite-sized actions with low friction)
+
+### 💭 Accountability Check
+(A question on what might get in the way and how to navigate it)`,
     };
 
-    const activeInstruction = personaInstructions[persona] || personaInstructions['Empathetic Coach'];
+    const activeInstruction = personaInstructions[persona] || personaInstructions['Socratic Explorer'];
 
     const systemInstruction = `
 ${activeInstruction}
 
 Context:
-The user is maintaining a private, secure personal journal and reflection space.
-- Current Journal Title: "${journalTitle || 'Untitled Reflection'}"
+The user is maintaining a private, secure personal reflection space.
+- Current Reflection: "${journalTitle || 'Untitled Reflection'}"
 - Category: "${category}"
 - User Mood: "${mood}"
-- Original Journal Content:
-${journalContent || '(No initial text provided yet)'}
+- Reflection Body:
+${journalContent || '(No reflection text written yet)'}
 
-Instructions:
-1. Provide a thoughtful, warm, and highly engaging reflection or response.
-2. Balance encouragement with deep, thought-provoking follow-up questions.
-3. If the user asks for suggestions or brainstorming, provide clearly formatted bullet points or numbered insights.
-4. Keep the tone respectful, psychologically safe, and supportive.
-5. Format your output with clean Markdown (headers, bullet points, italics).
+Guidelines:
+1. Provide a calm, intelligent, dignified, and emotionally safe response.
+2. Avoid generic chatbot pleasantries or filler. Dive straight into thoughtful engagement.
+3. Keep Markdown formatting clean and scannable.
 `.trim();
 
     // Prepare contents array for multi-turn history
@@ -129,7 +185,6 @@ Instructions:
       }
     }
 
-    // Append latest user prompt if provided and not already in conversation array
     if (userPrompt) {
       contents.push({
         role: 'user',
@@ -137,11 +192,10 @@ Instructions:
       });
     }
 
-    // Fallback if empty
     if (contents.length === 0) {
       contents.push({
         role: 'user',
-        parts: [{ text: `Please provide a thoughtful reflection and 2-3 insight questions based on my journal entry: "${journalTitle}". Content: ${journalContent}` }],
+        parts: [{ text: `Please offer a thoughtful reflection on my entry "${journalTitle}": ${journalContent}` }],
       });
     }
 
@@ -152,91 +206,142 @@ Instructions:
 
     res.json({
       success: true,
-      reply: result.text,
-      modelUsed: result.modelUsed,
+      data: {
+        reply: result.text,
+        modelUsed: result.modelUsed,
+      },
+      error: null,
     });
   } catch (error: any) {
     console.error('Error in /api/gemini/reflect:', error);
     res.status(500).json({
       success: false,
-      error: error?.message || 'Failed to generate reflection response with Gemini',
+      data: null,
+      error: {
+        code: 'REFLECTION_GENERATION_FAILED',
+        message: error?.message || 'The reflection could not be generated. Please retry in a moment.',
+      },
     });
   }
 });
 
-// Comprehensive Journal Summary & Takeaways Generator
+// Comprehensive Executive Insights & Action Generator
 app.post('/api/gemini/summarize', async (req, res) => {
   try {
     const body = (req.body && typeof req.body === 'object') ? req.body : {};
     const {
       journalTitle = '',
       journalContent = '',
-      category = '',
-      mood = '',
+      category = 'Daily Reflection',
+      mood = 'Reflective',
       conversation = [],
     } = body;
 
     const systemInstruction = `
-You are an expert cognitive synthesizer and personal growth advisor.
-Analyze the user's journal entry along with any dialogue exchanges.
+You are the Executive Insight Engine in ReflectAI.
+Analyze the user's reflection session and optional AI conversation.
 
-Provide a structured, beautifully formatted Markdown summary with the following distinct sections:
-1. 🌟 **Executive Summary** (2-3 sentences capturing the core essence)
-2. 💡 **Key Insights & Themes** (3-4 bullet points analyzing emotional, mental, or practical themes)
-3. 🎯 **Actionable Next Steps** (2-3 clear, gentle micro-actions or reflection practices)
-4. 💭 **Recommended Deep Reflection Question** (1 powerful question for future exploration)
+You MUST respond strictly with a valid JSON object matching this schema:
+{
+  "summary": "2-3 sentence clear, dignified executive summary capturing the core emotional and cognitive essence.",
+  "emotionalThemes": [
+    { "theme": "Clarity & Direction", "score": 85, "description": "High focus on determining next steps." },
+    { "theme": "Emotional Processing", "score": 60, "description": "Noticing tension between ambition and rest." }
+  ],
+  "observedPatterns": [
+    "You tend to seek clarity by organizing thoughts before taking action.",
+    "A recurring theme is balancing high standards with self-compassion."
+  ],
+  "suggestedActions": [
+    "Block 30 minutes of uninterrupted focus time for priority #1 tomorrow morning.",
+    "Practice a 2-minute pause before switching between demanding tasks."
+  ],
+  "deepQuestion": "What is one assumption you are holding that, if relaxed, would give you immediate breathing room?"
+}
 
-Maintain an encouraging, dignified, and insightful tone.
+Rules:
+- Non-clinical, supportive language ("You may be noticing...", "A recurring theme appears to be...").
+- Return ONLY valid raw JSON. No markdown code blocks like \`\`\`json.
 `.trim();
 
-    let combinedText = `Journal Title: ${journalTitle}\nCategory: ${category}\nMood: ${mood}\n\nEntry Body:\n${journalContent}\n\n`;
+    let combinedText = `Title: ${journalTitle}\nCategory: ${category}\nMood: ${mood}\n\nReflection Text:\n${journalContent}\n\n`;
 
     if (Array.isArray(conversation) && conversation.length > 0) {
-      combinedText += `\n--- Multi-turn Reflection Dialogue ---\n`;
-      conversation.forEach((m: any, idx: number) => {
-        combinedText += `\n[${m.role === 'model' ? 'Gemini AI' : 'User'}]: ${m.content}\n`;
+      combinedText += `\n--- AI Conversation Context ---\n`;
+      conversation.forEach((m: any) => {
+        combinedText += `\n[${m.role === 'model' ? 'AI' : 'User'}]: ${m.content}\n`;
       });
     }
 
-    const contents = [
-      {
-        role: 'user',
-        parts: [{ text: `Please generate a structured executive summary and key takeaways for this journal session:\n\n${combinedText}` }],
-      },
-    ];
-
     const result = await generateContentWithFallback({
-      contents,
+      contents: [{ role: 'user', parts: [{ text: `Analyze and extract executive insights for this reflection:\n\n${combinedText}` }] }],
       systemInstruction,
     });
 
+    let insightData: any = null;
+    try {
+      const cleanJson = result.text.replace(/```json\n?|\n?```/g, '').trim();
+      insightData = JSON.parse(cleanJson);
+    } catch {
+      // Fallback structured generation
+      insightData = {
+        summary: result.text.substring(0, 300) || "A meaningful reflection exploring personal balance, clarity, and intentional growth.",
+        emotionalThemes: [
+          { theme: category || "Self-Reflection", score: 80, description: "Active thoughtful examination" },
+          { theme: mood || "Clarity", score: 65, description: "Seeking calm alignment" }
+        ],
+        observedPatterns: [
+          "You are actively dedicating time to structured self-awareness.",
+          "Noticing emotional balance leads to clearer decision making."
+        ],
+        suggestedActions: [
+          "Take one tangible micro-step on your primary thought today.",
+          "Revisit this reflection in 3 days to notice subtle shifts."
+        ],
+        deepQuestion: "What would the most compassionate version of yourself choose next?"
+      };
+    }
+
     res.json({
       success: true,
-      summary: result.text,
-      modelUsed: result.modelUsed,
+      data: {
+        insight: insightData,
+        modelUsed: result.modelUsed,
+      },
+      error: null,
     });
   } catch (error: any) {
     console.error('Error in /api/gemini/summarize:', error);
     res.status(500).json({
       success: false,
-      error: error?.message || 'Failed to synthesize journal summary',
+      data: null,
+      error: {
+        code: 'INSIGHT_SYNTHESIS_FAILED',
+        message: error?.message || 'Failed to synthesize executive insights.',
+      },
     });
   }
 });
 
-// Dynamic Journal Prompts Generator
+// Dynamic "Inspire Me" Reflective Questions Generator
 app.post('/api/gemini/prompts', async (req, res) => {
   try {
     const body = (req.body && typeof req.body === 'object') ? req.body : {};
-    const { category = 'Personal Growth', mood = 'Contemplative' } = body;
+    const { category = 'Life & Growth', mood = 'Reflective', recentTheme = '' } = body;
 
     const systemInstruction = `
-You are a creative mindfulness guide. Generate 4 unique, deeply engaging journaling prompts tailored to the user's current mood (${mood}) and focus category (${category}).
-Return your response as a JSON array of strings: ["Prompt 1", "Prompt 2", "Prompt 3", "Prompt 4"]. Do not wrap in markdown codeblocks if possible, or return valid JSON.
+You are the ReflectAI Prompt Guide.
+Generate 4 deeply stimulating, psychologically safe, and elegant reflective questions tailored to the user's mood (${mood}) and category (${category}).
+${recentTheme ? `Recent context theme: ${recentTheme}` : ''}
+
+Format requirement:
+Return ONLY a valid JSON array of strings containing exactly 4 questions:
+["Question 1", "Question 2", "Question 3", "Question 4"]
+Do not wrap in markdown or include numbering inside the strings.
 `.trim();
 
     const result = await generateContentWithFallback({
-      contents: [{ role: 'user', parts: [{ text: `Generate 4 inspiring journal prompts for mood: ${mood} and category: ${category}` }] }],
+      contents: [{ role: 'user', parts: [{ text: `Generate 4 inspiring reflection questions for mood: ${mood}, focus: ${category}` }] }],
       systemInstruction,
     });
 
@@ -245,35 +350,44 @@ Return your response as a JSON array of strings: ["Prompt 1", "Prompt 2", "Promp
       const cleanJson = result.text.replace(/```json\n?|\n?```/g, '').trim();
       prompts = JSON.parse(cleanJson);
     } catch {
-      // Fallback extraction
       prompts = result.text
         .split('\n')
-        .map(l => l.replace(/^\d+[\.\)]\s*|\-\s*/, '').trim())
-        .filter(l => l.length > 5)
+        .map(l => l.replace(/^\d+[\.\)]\s*|\-\s*|"/g, '').trim())
+        .filter(l => l.length > 10)
         .slice(0, 4);
     }
 
     if (!Array.isArray(prompts) || prompts.length === 0) {
       prompts = [
-        "What is one moment from today that shifted your perspective?",
-        "What emotion has been taking up the most space in your mind recently?",
-        "If you could give your present self one piece of compassionate advice, what would it be?",
-        "What is one small boundary or goal that would bring you more peace this week?"
+        "What are you avoiding because you already know the answer?",
+        "What is currently energizing you, and what is subtly draining your attention?",
+        "If you let go of trying to control the outcome, what feels true right now?",
+        "What is one small boundary that would bring you immediate peace this week?"
       ];
     }
 
-    res.json({ success: true, prompts, modelUsed: result.modelUsed });
+    res.json({
+      success: true,
+      data: {
+        prompts,
+        modelUsed: result.modelUsed,
+      },
+      error: null,
+    });
   } catch (error: any) {
     console.error('Error in /api/gemini/prompts:', error);
     res.json({
       success: true,
-      prompts: [
-        "What is one challenge you navigated recently that made you stronger?",
-        "What are 3 things you feel quiet gratitude for right now?",
-        "What idea or project has been exciting you recently?",
-        "How can you show yourself deeper patience today?"
-      ],
-      modelUsed: 'fallback-static',
+      data: {
+        prompts: [
+          "What are you avoiding because you already know the answer?",
+          "What is currently energizing you, and what is subtly draining your attention?",
+          "If you let go of trying to control the outcome, what feels true right now?",
+          "What is one small boundary that would bring you immediate peace this week?"
+        ],
+        modelUsed: 'fallback-static',
+      },
+      error: null,
     });
   }
 });

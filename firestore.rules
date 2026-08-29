@@ -2,12 +2,12 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Global default-deny safety net
+    // Default deny all unknown collections
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // Helper functions
+    // Helper validation functions
     function isSignedIn() {
       return request.auth != null;
     }
@@ -20,18 +20,37 @@ service cloud.firestore {
       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
-    // Isolated user-level storage rule ensuring strict tenant isolation
+    // Isolated user-level tenancy
     match /users/{userId} {
-      allow read, write: if isOwner(userId) && isValidId(userId);
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow create, update, delete: if isOwner(userId) && isValidId(userId);
 
-      // Subcollection for journal entries and multi-turn reflections
+      // Explicit subcollection for journal reflections
       match /entries/{entryId} {
-        allow read, write: if isOwner(userId) && isValidId(entryId);
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(entryId);
+        allow create, update, delete: if isOwner(userId) && isValidId(entryId);
       }
 
-      // Any nested subcollections strictly bounded to the owning user
-      match /{allSubcollections=**} {
-        allow read, write: if isOwner(userId);
+      // Explicit subcollection for reflection action items
+      match /actions/{actionId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(actionId);
+        allow create, update, delete: if isOwner(userId) && isValidId(actionId);
+      }
+
+      // Explicit subcollection for user preferences
+      match /preferences/{prefId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(prefId);
+        allow create, update, delete: if isOwner(userId) && isValidId(prefId);
+      }
+
+      // Explicit subcollection for synthesized insights
+      match /insights/{insightId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(insightId);
+        allow create, update, delete: if isOwner(userId) && isValidId(insightId);
       }
     }
   }

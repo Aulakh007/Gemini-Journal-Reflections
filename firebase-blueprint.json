@@ -1,82 +1,86 @@
 {
   "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "User profile and metadata",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["userId", "createdAt", "updatedAt"]
+    },
     "JournalEntry": {
       "title": "Journal Entry",
       "description": "User journal entry containing reflections, prompts, and multi-turn Gemini conversations",
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the journal entry"
-        },
-        "userId": {
-          "type": "string",
-          "description": "The UID of the owning user"
-        },
-        "title": {
-          "type": "string",
-          "maxLength": 200,
-          "description": "Title of the journal entry"
-        },
-        "content": {
-          "type": "string",
-          "maxLength": 50000,
-          "description": "Written body text of the reflection"
-        },
-        "category": {
-          "type": "string",
-          "maxLength": 100,
-          "description": "Category or topic tag"
-        },
-        "mood": {
-          "type": "string",
-          "maxLength": 50,
-          "description": "User self-reported mood"
-        },
-        "tags": {
-          "type": "array",
-          "description": "List of string tags"
-        },
-        "summary": {
-          "type": "string",
-          "maxLength": 5000,
-          "description": "AI-generated reflection summary"
-        },
-        "keyThemes": {
-          "type": "array",
-          "description": "AI-extracted key themes"
-        },
-        "actionItems": {
-          "type": "array",
-          "description": "Actionable takeaways"
-        },
-        "messages": {
-          "type": "array",
-          "description": "Multi-turn Gemini chat interaction history"
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "ISO timestamp of creation"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "ISO timestamp of last update"
-        }
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string", "maxLength": 200 },
+        "content": { "type": "string", "maxLength": 50000 },
+        "category": { "type": "string", "maxLength": 100 },
+        "mood": { "type": "string", "maxLength": 50 },
+        "tags": { "type": "array" },
+        "summary": { "type": "string", "maxLength": 5000 },
+        "keyThemes": { "type": "array" },
+        "actionItems": { "type": "array" },
+        "messages": { "type": "array" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
       },
-      "required": [
-        "id",
-        "userId",
-        "title",
-        "content",
-        "createdAt",
-        "updatedAt"
-      ]
+      "required": ["id", "userId", "title", "content", "createdAt", "updatedAt"]
+    },
+    "ActionItem": {
+      "title": "Action Item",
+      "description": "Actionable next step derived from reflection insights",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "entryId": { "type": "string" },
+        "title": { "type": "string" },
+        "priority": { "type": "string", "enum": ["low", "medium", "high"] },
+        "dueDate": { "type": "string" },
+        "completed": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "title", "completed", "createdAt", "updatedAt"]
+    },
+    "UserPreference": {
+      "title": "User Preferences",
+      "description": "User custom preferences for theme, default persona, and animations",
+      "type": "object",
+      "properties": {
+        "theme": { "type": "string", "enum": ["light", "dark", "system"] },
+        "defaultPersona": { "type": "string" },
+        "defaultMood": { "type": "string" },
+        "reduceMotion": { "type": "boolean" },
+        "updatedAt": { "type": "string" }
+      }
     }
   },
   "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Isolated per-user document"
+    },
     "/users/{userId}/entries/{entryId}": {
       "schema": "JournalEntry",
       "description": "Isolated per-user collection storing personal reflections and AI interaction history"
+    },
+    "/users/{userId}/actions/{actionId}": {
+      "schema": "ActionItem",
+      "description": "Isolated per-user collection storing actionable takeaways from reflections"
+    },
+    "/users/{userId}/preferences/{prefId}": {
+      "schema": "UserPreference",
+      "description": "Isolated per-user collection storing personal UI and AI preferences"
     }
   }
 }
