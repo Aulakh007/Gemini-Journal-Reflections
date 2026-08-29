@@ -1,0 +1,82 @@
+{
+  "entities": {
+    "JournalEntry": {
+      "title": "Journal Entry",
+      "description": "User journal entry containing reflections, prompts, and multi-turn Gemini conversations",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the journal entry"
+        },
+        "userId": {
+          "type": "string",
+          "description": "The UID of the owning user"
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Title of the journal entry"
+        },
+        "content": {
+          "type": "string",
+          "maxLength": 50000,
+          "description": "Written body text of the reflection"
+        },
+        "category": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Category or topic tag"
+        },
+        "mood": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "User self-reported mood"
+        },
+        "tags": {
+          "type": "array",
+          "description": "List of string tags"
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 5000,
+          "description": "AI-generated reflection summary"
+        },
+        "keyThemes": {
+          "type": "array",
+          "description": "AI-extracted key themes"
+        },
+        "actionItems": {
+          "type": "array",
+          "description": "Actionable takeaways"
+        },
+        "messages": {
+          "type": "array",
+          "description": "Multi-turn Gemini chat interaction history"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of creation"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp of last update"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "title",
+        "content",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/entries/{entryId}": {
+      "schema": "JournalEntry",
+      "description": "Isolated per-user collection storing personal reflections and AI interaction history"
+    }
+  }
+}
