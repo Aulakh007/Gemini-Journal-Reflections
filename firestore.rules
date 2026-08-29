@@ -52,6 +52,20 @@ service cloud.firestore {
         allow get: if isOwner(userId) && isValidId(insightId);
         allow create, update, delete: if isOwner(userId) && isValidId(insightId);
       }
+
+      // Explicit subcollection for discovered reflection patterns
+      match /patterns/{patternId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(patternId);
+        allow create, update, delete: if isOwner(userId) && isValidId(patternId);
+      }
+
+      // Explicit subcollection for integrations & webhooks
+      match /integrations/{integrationId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(integrationId);
+        allow create, update, delete: if isOwner(userId) && isValidId(integrationId);
+      }
     }
   }
 }

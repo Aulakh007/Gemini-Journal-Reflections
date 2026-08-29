@@ -11,7 +11,7 @@ import {
   handleFirestoreError,
   OperationType 
 } from '../lib/firebase';
-import type { JournalEntry, ActionItem, UserPreferences, AIPersona, JournalMood } from '../types';
+import type { JournalEntry, ActionItem, UserPreferences, AIPersona, JournalMood, ReflectionPattern } from '../types';
 
 /**
  * Subscribes to real-time updates for a specific user's journal entries.
@@ -226,6 +226,88 @@ export async function saveUserPreferences(userId: string, prefs: Partial<UserPre
     await setDoc(prefRef, cleanPayload(prefs), { merge: true });
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+/**
+ * Subscribes to discovered reflection patterns in `/users/{userId}/patterns`
+ */
+export function subscribeUserPatterns(
+  userId: string,
+  onUpdate: (patterns: any[]) => void,
+  onError?: (error: Error) => void
+): () => void {
+  if (!userId) {
+    onUpdate([]);
+    return () => {};
+  }
+
+  const path = `users/${userId}/patterns`;
+  try {
+    const patternsRef = collection(db, 'users', userId, 'patterns');
+    const q = query(patternsRef, orderBy('createdAt', 'desc'));
+
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const patterns: any[] = [];
+        snapshot.forEach((docSnap) => {
+          patterns.push({
+            ...docSnap.data(),
+            id: docSnap.id,
+          });
+        });
+        onUpdate(patterns);
+      },
+      (error) => {
+        console.error('Firestore patterns subscription error:', error);
+        if (onError) {
+          try {
+            handleFirestoreError(error, OperationType.GET, path);
+          } catch (err: any) {
+            onError(err);
+          }
+        }
+      }
+    );
+  } catch (err: any) {
+    console.error('Failed to initialize patterns subscription:', err);
+    if (onError) onError(err);
+    return () => {};
+  }
+}
+
+/**
+ * Saves a single pattern to `/users/{userId}/patterns/{patternId}`
+ */
+export async function saveReflectionPattern(userId: string, pattern: ReflectionPattern): Promise<void> {
+  if (!userId || !pattern.id) return;
+  const path = `users/${userId}/patterns/${pattern.id}`;
+  try {
+    const patternRef = doc(db, 'users', userId, 'patterns', pattern.id);
+    await setDoc(patternRef, cleanPayload({
+      ...pattern,
+      userId,
+      createdAt: pattern.createdAt || new Date().toISOString(),
+    }), { merge: true });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+export const saveUserPattern = saveReflectionPattern;
+
+/**
+ * Deletes a pattern from `/users/{userId}/patterns/{patternId}`
+ */
+export async function deleteUserPattern(userId: string, patternId: string): Promise<void> {
+  if (!userId || !patternId) return;
+  const path = `users/${userId}/patterns/${patternId}`;
+  try {
+    const patternRef = doc(db, 'users', userId, 'patterns', patternId);
+    await deleteDoc(patternRef);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
   }
 }
 

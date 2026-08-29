@@ -13,9 +13,11 @@ import {
   FileText,
   AlertCircle,
   Maximize2,
-  Minimize2
+  Minimize2,
+  MapPin
 } from 'lucide-react';
-import type { JournalEntry, JournalMood, JournalCategory, AIPersona } from '../../types';
+import type { JournalEntry, JournalMood, JournalCategory, AIPersona, JournalLocation } from '../../types';
+import { LocationPickerModal } from './LocationPickerModal';
 
 interface JournalEditorProps {
   entry: JournalEntry;
@@ -37,6 +39,8 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({
   const [mood, setMood] = useState<JournalMood>(entry.mood || 'Reflective');
   const [category, setCategory] = useState<JournalCategory>(entry.category || 'Daily Reflection');
   const [tags, setTags] = useState<string[]>(entry.tags || []);
+  const [location, setLocation] = useState<JournalLocation | null>(entry.location || null);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [newTagInput, setNewTagInput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
@@ -87,7 +91,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({
       return;
     }
     setSaveStatus('unsaved');
-  }, [title, content, mood, category, tags]);
+  }, [title, content, mood, category, tags, location]);
 
   // Handle Tag Addition
   const handleAddTag = () => {
@@ -113,6 +117,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({
         mood,
         category,
         tags,
+        location: location || null,
         updatedAt: new Date().toISOString(),
       };
       await onSave(updated);
@@ -235,7 +240,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({
           </div>
         </div>
 
-        {/* Metadata Bar (Category & Tags) */}
+        {/* Metadata Bar (Category, Location & Tags) */}
         <div className="flex flex-wrap items-center gap-3 text-xs">
           {/* Category Dropdown */}
           <div className="flex items-center gap-1.5">
@@ -249,6 +254,39 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({
                 <option key={c} value={c}>{c}</option>
               ))}
             </select>
+          </div>
+
+          {/* Location Context Pill / Button */}
+          <div className="flex items-center">
+            {location ? (
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200/70 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 font-medium text-[11px]">
+                <MapPin className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                <span className="max-w-[160px] truncate" title={location.name}>{location.name}</span>
+                <button
+                  onClick={() => setIsLocationModalOpen(true)}
+                  className="hover:text-amber-700 dark:hover:text-amber-100 underline text-[10px] ml-1"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => setLocation(null)}
+                  className="hover:text-rose-600 dark:hover:text-rose-400 ml-0.5"
+                  title="Remove location"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ) : (
+              <button
+                id="add-location-btn"
+                type="button"
+                onClick={() => setIsLocationModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-[#1C1C1F] border border-dashed border-stone-300 dark:border-zinc-700 hover:border-indigo-400 dark:hover:border-indigo-500 text-stone-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              >
+                <MapPin className="w-3.5 h-3.5" />
+                <span>Add Location Context</span>
+              </button>
+            )}
           </div>
 
           {/* Tags Manager */}
@@ -343,6 +381,18 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Location Picker Modal */}
+      {isLocationModalOpen && (
+        <LocationPickerModal
+          currentLocation={location}
+          onSelectLocation={(loc) => {
+            setLocation(loc);
+            setIsLocationModalOpen(false);
+          }}
+          onClose={() => setIsLocationModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

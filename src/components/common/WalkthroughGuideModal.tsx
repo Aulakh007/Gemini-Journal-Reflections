@@ -12,35 +12,51 @@ export const WalkthroughGuideModal: React.FC<WalkthroughGuideModalProps> = ({ is
   const steps = [
     {
       step: '1',
-      title: 'Write a Reflection',
+      title: 'Write a Reflection & Anchor Location Context',
       icon: BookOpen,
       color: 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border-indigo-200/60 dark:border-indigo-800/60',
-      description: 'Start in the distraction-free journal editor. Choose your mood (Calm, Reflective, Energized, etc.), assign tags, and write your raw thoughts.',
-      testHint: 'Click "+ New Reflection", type a title and body, then click "Save Reflection". Verify the entry appears in your Dashboard.'
+      description: 'Start in the distraction-free journal editor. Choose your mood (Calm, Inspired, Challenged, etc.), tag your themes, and optionally anchor a physical place (Cafe, Park, Studio, Home) via the Location modal.',
+      testHint: 'Click "+ New Reflection", type thoughts, click "Add Location" to pick a spot, then click "Save Reflection".'
     },
     {
       step: '2',
-      title: 'Engage with AI Personas',
-      icon: Brain,
-      color: 'bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 border-purple-200/60 dark:border-purple-800/60',
-      description: 'Choose between 4 specialized cognitive guides: Socratic Explorer, Empathetic Listener, Pattern Finder, or Practical Coach for multi-turn dialogue.',
-      testHint: 'In the editor or AI Explorer, choose a persona and click "Reflect on this entry". Notice the structured Observation, Question, and Next Step.'
+      title: 'Explore Temporal Journey in Timeline',
+      icon: HelpCircle,
+      color: 'bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400 border-cyan-200/60 dark:border-cyan-800/60',
+      description: 'Open the new Timeline view to browse your reflections across days, filter by mood or location presence, and observe your environment clusters.',
+      testHint: 'Click "Timeline" in the sidebar, filter by mood or "Location Attached", and expand entry detail cards.'
     },
     {
       step: '3',
-      title: 'Synthesize Executive Insights',
-      icon: Lightbulb,
-      color: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-800/60',
-      description: 'Generate an executive summary with emotional theme scores, observed cognitive patterns, and a guiding philosophical question to carry forward.',
-      testHint: 'Navigate to "Insights & Actions", pick your reflection, and click "Synthesize". Check the theme percentage bars.'
+      title: 'Engage with 6 Specialized AI Personas',
+      icon: Brain,
+      color: 'bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 border-purple-200/60 dark:border-purple-800/60',
+      description: 'Choose between 6 distinct cognitive guides: Socratic Explorer, Empathetic Listener, Pattern Finder, Practical Coach, Perspective Shifter, or Future Self.',
+      testHint: 'In the AI Explorer tab, pick "Perspective Shifter" or "Future Self" and submit a reflection prompt. Verify structured, compassionate guidance.'
     },
     {
       step: '4',
-      title: 'Turn Insights into Concrete Action',
-      icon: Target,
+      title: 'Longitudinal Pattern Discovery',
+      icon: Sparkles,
       color: 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-200/60 dark:border-amber-800/60',
-      description: 'Convert AI suggestions into actionable checklist items with priority indicators (High, Medium, Low) and optional due dates.',
-      testHint: 'Check off actions as you complete them, and watch your dashboard metrics reflect your progress.'
+      description: 'Synthesize overarching cognitive tendencies, emotional cycles, and location habits across your reflections, backed by concrete evidence and micro-steps.',
+      testHint: 'Navigate to "Pattern Discovery" and click "Discover Patterns". Click "Add to Actions" on any recommended micro-step.'
+    },
+    {
+      step: '5',
+      title: 'Executive Insights & Action Momentum',
+      icon: Lightbulb,
+      color: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-800/60',
+      description: 'Synthesize executive summaries, emotional theme breakdowns, and track action items with high/medium/low priority indicators and due dates.',
+      testHint: 'In "Insights & Actions", check off completed steps and track your momentum score in the Dashboard.'
+    },
+    {
+      step: '6',
+      title: 'Platform Observability & Webhook Integration',
+      icon: Target,
+      color: 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-rose-200/60 dark:border-rose-800/60',
+      description: 'Audit Gemini API health, model fallback ladder, and RBAC isolation in "Platform & Admin". Configure external Discord or Slack webhook notifications in "Settings".',
+      testHint: 'Visit "Platform & Admin" to inspect live latency. In Settings, configure a webhook and click "Test Ping".'
     },
   ];
 

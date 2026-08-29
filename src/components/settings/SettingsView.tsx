@@ -15,9 +15,21 @@ import {
   Sparkles,
   RefreshCw,
   FileCode,
-  AlertTriangle
+  AlertTriangle,
+  Bell,
+  Send,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
-import type { UserProfile, UserPreferences, AIPersona, JournalMood, JournalEntry, ActionItem } from '../../types';
+import type { 
+  UserProfile, 
+  UserPreferences, 
+  AIPersona, 
+  JournalMood, 
+  JournalEntry, 
+  ActionItem,
+  NotificationWebhookConfig 
+} from '../../types';
 
 interface SettingsViewProps {
   user: UserProfile | null;
@@ -45,8 +57,71 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
-  const personas: AIPersona[] = ['Socratic Explorer', 'Empathetic Listener', 'Pattern Finder', 'Practical Coach'];
+  // Webhook state
+  const defaultWebhookConfig: NotificationWebhookConfig = preferences.webhookConfig || {
+    enabled: false,
+    provider: 'discord',
+    webhookUrl: '',
+    notifyOnNewEntry: true,
+    notifyOnActionItem: true,
+    notifyOnInsight: false,
+    privacyLevel: 'minimal_metadata',
+  };
+  const [webhookConfig, setWebhookConfig] = useState<NotificationWebhookConfig>(defaultWebhookConfig);
+  const [isTestingWebhook, setIsTestingWebhook] = useState(false);
+  const [webhookTestFeedback, setWebhookTestFeedback] = useState<{ status: 'success' | 'error'; message: string } | null>(null);
+
+  const personas: AIPersona[] = [
+    'Socratic Explorer', 
+    'Empathetic Listener', 
+    'Pattern Finder', 
+    'Practical Coach',
+    'Perspective Shifter',
+    'Future Self'
+  ];
   const moods: JournalMood[] = ['Calm', 'Reflective', 'Inspired', 'Grateful', 'Energized', 'Challenged', 'Low', 'Frustrated', 'Anxious'];
+
+  const handleSaveWebhookConfig = async (newConfig: NotificationWebhookConfig) => {
+    setWebhookConfig(newConfig);
+    await onUpdatePreferences({ webhookConfig: newConfig });
+  };
+
+  const handleTestWebhook = async () => {
+    if (!webhookConfig.webhookUrl) {
+      setWebhookTestFeedback({ status: 'error', message: 'Please enter a webhook URL first.' });
+      return;
+    }
+
+    setIsTestingWebhook(true);
+    setWebhookTestFeedback(null);
+
+    try {
+      const res = await fetch('/api/notifications/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          webhookUrl: webhookConfig.webhookUrl,
+          provider: webhookConfig.provider,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setWebhookTestFeedback({ status: 'success', message: 'Ping received successfully by your webhook channel!' });
+        await handleSaveWebhookConfig({
+          ...webhookConfig,
+          lastTestedAt: new Date().toISOString(),
+          lastTestStatus: 'success',
+        });
+      } else {
+        setWebhookTestFeedback({ status: 'error', message: data.error?.message || 'Webhook rejected test request.' });
+      }
+    } catch (err: any) {
+      setWebhookTestFeedback({ status: 'error', message: err?.message || 'Could not dispatch webhook test.' });
+    } finally {
+      setIsTestingWebhook(false);
+    }
+  };
 
   // Export all user reflections as JSON
   const handleExportJSON = () => {
@@ -229,6 +304,110 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </select>
           </div>
         </div>
+      </div>
+
+      {/* External Webhook Notifications (Slack / Discord / Custom) */}
+      <div className="p-6 rounded-2xl bg-white dark:bg-[#1C1C1F] border border-stone-200/80 dark:border-zinc-800/80 shadow-2xs space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 className="text-sm font-semibold text-stone-900 dark:text-white flex items-center gap-2">
+              <Bell className="w-4 h-4 text-indigo-500" />
+              External Webhook Notifications
+            </h2>
+            <p className="text-xs text-stone-500 dark:text-zinc-400 mt-0.5">
+              Receive private reflection confirmations and action reminders in your personal Discord, Slack, or webhook channel
+            </p>
+          </div>
+
+          <label className="relative inline-flex items-center cursor-pointer self-start sm:self-auto">
+            <input
+              type="checkbox"
+              checked={webhookConfig.enabled}
+              onChange={(e) => handleSaveWebhookConfig({ ...webhookConfig, enabled: e.target.checked })}
+              className="sr-only peer"
+            />
+            <div className="w-9 h-5 bg-stone-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+            <span className="ml-2 text-xs font-medium text-stone-700 dark:text-stone-300">
+              {webhookConfig.enabled ? 'Enabled' : 'Disabled'}
+            </span>
+          </label>
+        </div>
+
+        {webhookConfig.enabled && (
+          <div className="space-y-4 pt-2 border-t border-stone-100 dark:border-zinc-800/80 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Provider Selection */}
+              <div className="space-y-1.5">
+                <label className="font-semibold text-stone-800 dark:text-stone-200">Webhook Platform</label>
+                <select
+                  value={webhookConfig.provider}
+                  onChange={(e) => handleSaveWebhookConfig({ ...webhookConfig, provider: e.target.value as any })}
+                  className="w-full px-3 py-2 text-xs rounded-xl bg-stone-50 dark:bg-zinc-900 border border-stone-200 dark:border-zinc-800 text-stone-800 dark:text-stone-200 font-medium focus:outline-none"
+                >
+                  <option value="discord">Discord Channel Webhook</option>
+                  <option value="slack">Slack Incoming Webhook</option>
+                  <option value="custom">Custom HTTPS Webhook (JSON)</option>
+                </select>
+              </div>
+
+              {/* Privacy Level */}
+              <div className="space-y-1.5">
+                <label className="font-semibold text-stone-800 dark:text-stone-200">Privacy & Payload Scope</label>
+                <select
+                  value={webhookConfig.privacyLevel}
+                  onChange={(e) => handleSaveWebhookConfig({ ...webhookConfig, privacyLevel: e.target.value as any })}
+                  className="w-full px-3 py-2 text-xs rounded-xl bg-stone-50 dark:bg-zinc-900 border border-stone-200 dark:border-zinc-800 text-stone-800 dark:text-stone-200 font-medium focus:outline-none"
+                >
+                  <option value="minimal_metadata">Minimal Metadata (Date & Title only)</option>
+                  <option value="include_summary">Include Short AI Reflection Summary</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Webhook URL Input */}
+            <div className="space-y-1.5">
+              <label className="font-semibold text-stone-800 dark:text-stone-200">Webhook Endpoint URL</label>
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  placeholder="https://discord.com/api/webhooks/... or https://hooks.slack.com/services/..."
+                  value={webhookConfig.webhookUrl}
+                  onChange={(e) => setWebhookConfig({ ...webhookConfig, webhookUrl: e.target.value })}
+                  onBlur={() => handleSaveWebhookConfig(webhookConfig)}
+                  className="flex-1 px-3 py-2 text-xs rounded-xl bg-stone-50 dark:bg-zinc-900 border border-stone-200 dark:border-zinc-800 text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-zinc-500 font-mono focus:outline-none focus:border-indigo-500"
+                />
+                <button
+                  onClick={handleTestWebhook}
+                  disabled={isTestingWebhook || !webhookConfig.webhookUrl}
+                  className="px-4 py-2 rounded-xl bg-stone-900 dark:bg-white text-white dark:text-stone-900 font-medium text-xs hover:opacity-90 transition-all shrink-0 inline-flex items-center gap-1.5 disabled:opacity-40"
+                >
+                  {isTestingWebhook ? (
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Send className="w-3.5 h-3.5" />
+                  )}
+                  <span>Test Ping</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Test Status Feedback Banner */}
+            {webhookTestFeedback && (
+              <div className={`p-3 rounded-xl border flex items-center gap-2 text-xs ${
+                webhookTestFeedback.status === 'success'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
+                  : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300'
+              }`}>
+                {webhookTestFeedback.status === 'success' ? (
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                )}
+                <span>{webhookTestFeedback.message}</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Security & Threat Boundaries Transparency Card */}

@@ -16,7 +16,8 @@ import type {
   ToastMessage, 
   JournalMood, 
   JournalCategory, 
-  ChatMessage 
+  ChatMessage,
+  ReflectionPattern
 } from './types';
 import { 
   subscribeUserEntries, 
@@ -27,6 +28,8 @@ import {
   deleteActionItem, 
   subscribeUserPreferences, 
   saveUserPreferences, 
+  subscribeUserPatterns,
+  saveReflectionPattern,
   createNewEntryTemplate 
 } from './services/firestoreService';
 
@@ -34,9 +37,12 @@ import { AppShell } from './components/layout/AppShell';
 import { DashboardView } from './components/dashboard/DashboardView';
 import { JournalView } from './components/journal/JournalView';
 import { JournalEditor } from './components/journal/JournalEditor';
+import { TimelineView } from './components/timeline/TimelineView';
+import { PatternsView } from './components/patterns/PatternsView';
 import { AIReflectionView } from './components/reflections/AIReflectionView';
 import { InsightsView } from './components/insights/InsightsView';
 import { InspireMeView } from './components/inspire/InspireMeView';
+import { AdminView } from './components/admin/AdminView';
 import { SettingsView } from './components/settings/SettingsView';
 import { AuthScreen } from './components/auth/AuthScreen';
 import { ToastContainer } from './components/common/Toast';
@@ -56,6 +62,7 @@ export default function App() {
   // Firestore Data State
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [actions, setActions] = useState<ActionItem[]>([]);
+  const [patterns, setPatterns] = useState<ReflectionPattern[]>([]);
   const [preferences, setPreferences] = useState<UserPreferences>({
     theme: 'light',
     defaultPersona: 'Socratic Explorer',
@@ -162,10 +169,21 @@ export default function App() {
       }
     });
 
+    const unsubPatterns = subscribeUserPatterns(
+      user.uid,
+      (loadedPatterns) => {
+        setPatterns(loadedPatterns);
+      },
+      (error) => {
+        console.error('Patterns subscription error:', error);
+      }
+    );
+
     return () => {
       unsubEntries();
       unsubActions();
       unsubPreferences();
+      unsubPatterns();
     };
   }, [user?.uid, showToast]);
 
@@ -429,6 +447,7 @@ export default function App() {
       setSearchQuery={setGlobalSearchQuery}
       entryCount={entries.length}
       actionCount={actions.filter((a) => !a.completed).length}
+      patternCount={patterns.length}
     >
       {/* 1. Dashboard View */}
       {activeTab === 'dashboard' && (
@@ -448,7 +467,45 @@ export default function App() {
         />
       )}
 
-      {/* 2. Journal View & Editor */}
+      {/* 2. Timeline View (Temporal & Environmental Journey) */}
+      {activeTab === 'timeline' && (
+        <TimelineView
+          entries={entries}
+          onSelectEntry={(entry) => {
+            setActiveEditingEntry(entry);
+            setActiveTab('journal');
+          }}
+          onOpenAiDialogue={(entry) => {
+            setActiveEditingEntry(entry);
+            setActiveTab('reflections');
+          }}
+          onOpenInsights={(entry) => handleSynthesizeEntry(entry)}
+          onCreateNewEntry={() => handleStartNewReflection()}
+        />
+      )}
+
+      {/* 3. Pattern Discovery View (Longitudinal AI Patterns) */}
+      {activeTab === 'patterns' && (
+        <PatternsView
+          entries={entries}
+          savedPatterns={patterns}
+          onSavePattern={async (pattern) => {
+            if (user) {
+              await saveReflectionPattern(user.uid, pattern);
+            }
+          }}
+          onAddActionItem={(title, priority) => handleAddActionItem(title, priority)}
+          onSelectEntryById={(entryId) => {
+            const matched = entries.find((e) => e.id === entryId);
+            if (matched) {
+              setActiveEditingEntry(matched);
+              setActiveTab('journal');
+            }
+          }}
+        />
+      )}
+
+      {/* 4. Journal View & Editor */}
       {activeTab === 'journal' && (
         activeEditingEntry ? (
           <JournalEditor
@@ -473,7 +530,7 @@ export default function App() {
         )
       )}
 
-      {/* 3. AI Explorer View */}
+      {/* 5. AI Explorer View */}
       {activeTab === 'reflections' && (
         <AIReflectionView
           activeEntry={activeEditingEntry || (entries.length > 0 ? entries[0] : null)}
@@ -484,7 +541,7 @@ export default function App() {
         />
       )}
 
-      {/* 4. Insights & Actions View */}
+      {/* 6. Insights & Actions View */}
       {activeTab === 'insights' && (
         <InsightsView
           entries={entries}
@@ -500,7 +557,7 @@ export default function App() {
         />
       )}
 
-      {/* 5. Inspire Me View */}
+      {/* 7. Inspire Me View */}
       {activeTab === 'inspire' && (
         <InspireMeView
           onStartReflectionWithPrompt={(promptText, mood, category) => {
@@ -509,7 +566,20 @@ export default function App() {
         />
       )}
 
-      {/* 6. Settings & Privacy View */}
+      {/* 8. Platform & Admin Observability View */}
+      {activeTab === 'admin' && (
+        <AdminView
+          user={user}
+          onUpdateRole={(newRole) => {
+            if (user) {
+              setUser({ ...user, role: newRole });
+              showToast('info', 'RBAC Role Switched', `Active role simulated as ${newRole.toUpperCase()}.`);
+            }
+          }}
+        />
+      )}
+
+      {/* 9. Settings & Privacy View */}
       {activeTab === 'settings' && (
         <SettingsView
           user={user}

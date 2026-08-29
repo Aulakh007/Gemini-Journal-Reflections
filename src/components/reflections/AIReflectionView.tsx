@@ -17,7 +17,10 @@ import {
   ArrowLeft,
   AlertCircle,
   HelpCircle,
-  CheckCircle2
+  CheckCircle2,
+  MapPin,
+  Eye,
+  Hourglass
 } from 'lucide-react';
 import type { JournalEntry, AIPersona, ChatMessage, PersonaDetails, ActionItem } from '../../types';
 
@@ -83,6 +86,24 @@ export const AIReflectionView: React.FC<AIReflectionViewProps> = ({
       iconName: 'Target',
       color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/60 dark:border-emerald-800/60',
     },
+    {
+      id: 'Perspective Shifter',
+      name: 'Perspective Shifter',
+      tagline: 'Alternative Vantage Points',
+      description: 'Reframes situations from outsider perspectives, worst-case inversions, and stakeholder lenses to unstick fixed narratives.',
+      badge: 'Reframing',
+      iconName: 'Eye',
+      color: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border-amber-200/60 dark:border-amber-800/60',
+    },
+    {
+      id: 'Future Self',
+      name: 'Future Self',
+      tagline: 'Long-Term Wisdom',
+      description: 'Guides you to look back from 5-10 years in the future, separating transient noise from what will truly matter.',
+      badge: 'Horizon',
+      iconName: 'Hourglass',
+      color: 'text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/40 border-cyan-200/60 dark:border-cyan-800/60',
+    },
   ];
 
   // Auto-scroll on new message
@@ -118,6 +139,7 @@ export const AIReflectionView: React.FC<AIReflectionViewProps> = ({
           journalContent: activeEntry?.content || '',
           category: activeEntry?.category || 'Daily Reflection',
           mood: activeEntry?.mood || 'Reflective',
+          locationName: activeEntry?.location?.name || '',
           conversation: newConversation,
           persona: selectedPersona,
           userPrompt: promptToSend,
@@ -196,20 +218,26 @@ export const AIReflectionView: React.FC<AIReflectionViewProps> = ({
         </div>
 
         {activeEntry && (
-          <div className="p-2.5 rounded-xl bg-white dark:bg-[#1C1C1F] border border-stone-200/80 dark:border-zinc-800 text-xs text-stone-600 dark:text-stone-300 flex items-center gap-2 max-w-sm">
+          <div className="p-2.5 rounded-xl bg-white dark:bg-[#1C1C1F] border border-stone-200/80 dark:border-zinc-800 text-xs text-stone-600 dark:text-stone-300 flex items-center gap-2 max-w-md">
             <BookOpen className="w-4 h-4 text-indigo-500 flex-shrink-0" />
-            <div className="truncate">
+            <div className="truncate flex-1">
               <span className="text-stone-400 dark:text-zinc-500 block text-[10px]">Active Reflection:</span>
               <span className="font-medium truncate block">{activeEntry.title}</span>
             </div>
+            {activeEntry.location?.name && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/50 border border-amber-200/60 dark:border-amber-800/60 text-amber-800 dark:text-amber-300 text-[10px] shrink-0 font-medium">
+                <MapPin className="w-3 h-3 text-amber-600" />
+                <span className="max-w-[100px] truncate">{activeEntry.location.name}</span>
+              </span>
+            )}
           </div>
         )}
       </div>
 
       {/* Persona Selection Ribbon */}
       <div className="space-y-2">
-        <label className="text-xs font-medium text-stone-500 dark:text-zinc-400">Choose AI Reflection Persona:</label>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <label className="text-xs font-medium text-stone-500 dark:text-zinc-400">Choose AI Reflection Persona (6 Perspectives):</label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {personas.map((p) => {
             const isSelected = selectedPersona === p.id;
             return (

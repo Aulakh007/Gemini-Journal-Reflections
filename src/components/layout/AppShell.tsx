@@ -22,7 +22,10 @@ import {
   X, 
   ChevronRight,
   HelpCircle,
-  Shield
+  Shield,
+  Clock,
+  Flame,
+  Activity
 } from 'lucide-react';
 import type { ActiveTab, UserProfile, JournalMood, JournalCategory, AIPersona } from '../../types';
 
@@ -41,6 +44,7 @@ interface AppShellProps {
   setSearchQuery: (query: string) => void;
   entryCount: number;
   actionCount: number;
+  patternCount?: number;
   children: React.ReactNode;
 }
 
@@ -59,6 +63,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   setSearchQuery,
   entryCount,
   actionCount,
+  patternCount = 0,
   children,
 }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -68,9 +73,11 @@ export const AppShell: React.FC<AppShellProps> = ({
   const navItems = [
     { id: 'dashboard' as ActiveTab, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'journal' as ActiveTab, label: 'Journal', icon: BookOpen, badge: entryCount > 0 ? String(entryCount) : undefined },
+    { id: 'timeline' as ActiveTab, label: 'Timeline', icon: Clock },
     { id: 'reflections' as ActiveTab, label: 'AI Explorer', icon: Brain },
+    { id: 'patterns' as ActiveTab, label: 'Pattern Discovery', icon: Flame, badge: patternCount > 0 ? String(patternCount) : undefined },
     { id: 'insights' as ActiveTab, label: 'Insights & Actions', icon: Lightbulb, badge: actionCount > 0 ? String(actionCount) : undefined },
-    { id: 'inspire' as ActiveTab, label: 'Inspire Me', icon: Sparkles },
+    { id: 'admin' as ActiveTab, label: 'Platform & Admin', icon: Activity },
     { id: 'settings' as ActiveTab, label: 'Settings', icon: SettingsIcon },
   ];
 

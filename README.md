@@ -1,59 +1,68 @@
 # Gemini Journal & Reflections (ReflectAI)
 
-A secure, production-grade personal journaling and cognitive AI reflection platform built with React 18, TypeScript, Tailwind CSS, Express, Google Cloud Firestore, Firebase Authentication, and the Google Gemini API (`@google/genai`).
+A secure, production-grade personal journaling and cognitive reflection intelligence platform built with React 18, TypeScript, Tailwind CSS, Express, Google Cloud Firestore, Firebase Authentication, Google Maps Platform Places search, and the Google Gemini API (`@google/genai`).
 
 ---
 
 ## Table of Contents
 
 - [Overview](#overview)
-- [Features](#features)
+- [Architecture & Key Capabilities](#architecture--key-capabilities)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Prerequisites](#prerequisites)
-- [Installation](#installation)
+- [Installation & Local Setup](#installation--local-setup)
 - [Environment Variables](#environment-variables)
-- [Development](#development)
-- [Linting and Type Checking](#linting-and-type-checking)
+- [Development Workflow](#development-workflow)
+- [Verification & Quality Assurance](#verification--quality-assurance)
 - [Testing & Functional Walkthrough](#testing--functional-walkthrough)
 - [Production Build](#production-build)
-- [Deployment](#deployment)
-- [API & Backend Configuration](#api--backend-configuration)
-- [Database & Security Rules](#database--security-rules)
-- [Threat Model & Security](#threat-model--security)
+- [Google Cloud Run Deployment](#google-cloud-run-deployment)
+- [Database Architecture & Firestore Security Rules](#database-architecture--firestore-security-rules)
+- [Agentic Threat Model & OWASP Mitigations](#threat-model--owasp-mitigations)
 - [Troubleshooting](#troubleshooting)
-- [Git Workflow](#git-workflow)
-- [Deployment Checklist](#deployment-checklist)
 
 ---
 
 ## Overview
 
-**Gemini Journal & Reflections** (ReflectAI) provides a private, structured sanctuary for self-reflection and emotional clarity. Users maintain personal journal entries backed by tenant-isolated Cloud Firestore storage and engage in guided multi-turn dialogues with specialized AI personas powered by Google Gemini. The platform transforms raw thoughts into structured executive summaries, emotional theme metrics, and actionable micro-steps.
+**ReflectAI** transforms unstructured self-reflection into actionable cognitive clarity. It serves as a personal reflection intelligence sanctuary where users record private reflections, anchor environmental context (via Google Places search), engage in multi-turn dialogues with specialized philosophical and coaching personas, synthesize longitudinal patterns across entries over time, and export actionable micro-steps.
 
 ```text
 ┌─────────────────┐      ┌─────────────────────────┐      ┌─────────────────────────┐      ┌─────────────────────────┐
-│   1. Reflect    │ ───► │  2. Cognitive Dialogue  │ ───► │  3. Executive Insights  │ ───► │   4. Meaningful Action  │
-│ Distraction-free│      │  4 Guided AI Personas   │      │  Themes & Patterns      │      │  Tracked Micro-Steps    │
+│   1. Reflect    │ ───► │  2. Cognitive Dialogue  │ ───► │  3. Pattern Discovery   │ ───► │   4. Meaningful Action  │
+│  Location Context│     │  6 Guided AI Personas   │      │  Longitudinal Trends    │      │  Tracked Micro-Steps    │
 └─────────────────┘      └─────────────────────────┘      └─────────────────────────┘      └─────────────────────────┘
 ```
 
 ---
 
-## Features
+## Architecture & Key Capabilities
 
-- **Distraction-Free Journal Editor**: Clean, responsive rich-text editor with mood indicators, category categorization, tag management, and real-time word counting.
-- **Cognitive AI Dialogue with 4 Personas**:
-  - *Socratic Explorer*: Uncovers assumptions and blind spots through thoughtful inquiries.
-  - *Empathetic Listener*: Validates emotions and fosters self-compassion without premature judgment.
-  - *Pattern Finder*: Identifies recurring cognitive, behavioral, or emotional habits.
-  - *Practical Coach*: Deconstructs overwhelm into low-friction, high-leverage micro-actions.
-- **Executive Synthesis & Emotional Analysis**: Synthesizes reflections into executive summaries, emotional distribution scores (0–100%), observed patterns, and deep philosophical questions.
-- **Action Step Manager**: Converts AI suggestions and user intentions into trackable action items with priority flags (High, Medium, Low) and completion status.
-- **Dynamic Prompt Generator ("Inspire Me")**: Generates context-aware, psychologically safe reflection questions based on the user's current mood and focus.
-- **Analytics & Habit Tracking**: Tracks reflection streaks, weekly logging volume, word count analytics, and emotional balance distributions.
-- **Data Export & Privacy Controls**: Full data portability with 1-click export to Markdown (`.md`) and JSON (`.json`), plus complete user data purge capabilities.
-- **Dark & Light Mode**: Seamless theme switching with high-contrast accessibility across desktop and mobile devices.
+1. **Distraction-Free Journaling with Optional Location Anchoring**:
+   - Clean, high-contrast writing environment with mood indicators and tag manager.
+   - Privacy-conscious location selection (Cafe, Park, Studio, Home) via Google Maps Platform Places search without background GPS snooping.
+2. **Interactive Temporal & Environmental Timeline**:
+   - Chronological reflection stream grouped by date.
+   - Filter by mood, search query, or entries with attached location environments.
+3. **6 Guided Cognitive AI Personas**:
+   - *Socratic Explorer*: Uncovers underlying assumptions and questions blind spots.
+   - *Empathetic Listener*: Validates emotions and fosters self-compassion.
+   - *Pattern Finder*: Highlights recurring triggers and behavioral habits.
+   - *Practical Coach*: Deconstructs thoughts into immediate, grounded micro-steps.
+   - *Perspective Shifter*: Reframes situations from outside stakeholder and inverted lenses.
+   - *Future Self*: Provides long-term horizon clarity from 5–10 years in the future.
+4. **Longitudinal Pattern Discovery**:
+   - Synthesizes recurring cognitive cycles, emotional trajectories, and environmental habits.
+   - Grounded in concrete evidence with reflection counts, date ranges, and 1-click micro-actions.
+5. **Executive Synthesis & Emotional Balance Analysis**:
+   - Generates structured executive summaries and emotional theme distribution scores (0–100%).
+6. **External Webhook Notifications (Slack / Discord / Custom)**:
+   - Configurable webhook dispatch with privacy mode options (Minimal Metadata vs Full Summary).
+7. **Platform Observability & System Health**:
+   - Real-time uptime telemetry, Gemini API latency tracker, model fallback ladder, and RBAC isolation validator.
+8. **Data Portability & Zero-Leakage Privacy**:
+   - 1-click full export to Markdown (`.md`) and JSON (`.json`), plus secure single-click data wipe.
 
 ---
 
@@ -62,10 +71,11 @@ A secure, production-grade personal journaling and cognitive AI reflection platf
 | Layer | Technologies |
 | :--- | :--- |
 | **Frontend Framework** | React 18, TypeScript, Vite 6 |
-| **Styling & UI** | Tailwind CSS v4, Lucide React Icons, Motion (Animations) |
+| **Styling & UI** | Tailwind CSS v4, Lucide React Icons, Motion |
 | **Backend & Server** | Node.js (v20+), Express 4, tsx (dev), esbuild (production bundling) |
 | **Database & Auth** | Google Cloud Firestore, Firebase Authentication (Google Federated Sign-In) |
-| **AI & LLM** | Google Gemini API (`@google/genai`) with resilient model fallback ladder |
+| **AI & LLM** | Google Gemini API (`@google/genai`) with 4-tier resilient model fallback ladder |
+| **Maps & Places** | Google Maps Platform Places Text Search API |
 | **Cloud Runtime** | Google Cloud Run, Google Cloud Secret Manager, Cloud Buildpacks |
 
 ---
@@ -93,273 +103,210 @@ A secure, production-grade personal journaling and cognitive AI reflection platf
     ├── services/
     │   └── firestoreService.ts   # Firestore CRUD, real-time subscriptions & payload sanitizers
     └── components/
+        ├── admin/
+        │   └── AdminView.tsx     # Platform observability & security metrics
         ├── auth/
         │   └── AuthScreen.tsx    # Landing page and Google authentication gateway
         ├── common/
         │   ├── DeleteConfirmModal.tsx    # Destructive action confirmation dialog
         │   ├── ThreatModelModal.tsx      # Interactive 5-zone threat model viewer
         │   ├── Toast.tsx                 # Toast notification system
-        │   └── WalkthroughGuideModal.tsx # Interactive test walkthrough guide
+        │   └── WalkthroughGuideModal.tsx # End-to-end user verification guide
         ├── dashboard/
-        │   └── DashboardView.tsx # Overview statistics, streak counter & recent entries
+        │   └── DashboardView.tsx # Overview statistics, streaks, and recent activity
         ├── insights/
-        │   └── InsightsView.tsx  # Executive summaries, theme metrics & action items
+        │   └── InsightsView.tsx  # Executive summaries & action item tracker
         ├── inspire/
-        │   └── InspireMeView.tsx # Dynamic reflective prompt generator
+        │   └── InspireMeView.tsx # Dynamic reflection prompt generator
         ├── journal/
-        │   ├── JournalEditor.tsx # Reflection editor with mood selector & AI triggers
-        │   └── JournalView.tsx   # Filterable list of all user journal entries
+        │   ├── JournalEditor.tsx # Rich distraction-free journal writer
+        │   ├── JournalView.tsx   # Filterable journal archives & search
+        │   └── LocationPickerModal.tsx # Google Places location selector
         ├── layout/
-        │   └── AppShell.tsx      # Navigation sidebar, top bar, search & mobile drawer
+        │   └── AppShell.tsx      # Sidebar, top navigation bar, mobile drawer
+        ├── patterns/
+        │   └── PatternsView.tsx  # Longitudinal AI pattern discovery
         ├── reflections/
-        │   └── AIReflectionView.tsx # Multi-turn conversational AI reflection interface
-        └── settings/
-            └── SettingsView.tsx  # User preferences, data export & account controls
-```
-
----
-
-## Prerequisites
-
-Before setting up or running the project, ensure you have the following installed:
-
-- **Node.js**: `v20.0.0` or higher (LTS recommended)
-- **npm**: `v9.0.0` or higher
-- **Google Cloud SDK (`gcloud` CLI)**: Installed and authenticated (`gcloud auth login`)
-- **Google Cloud Project**: With billing enabled
-- **Gemini API Key**: From [Google AI Studio](https://aistudio.google.com/)
-
----
-
-## Installation
-
-Follow these step-by-step instructions to set up the project from a fresh clone:
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/gemini-journal-reflections.git
-
-# 2. Enter the project directory
-cd gemini-journal-reflections
-
-# 3. Install dependencies
-npm install
-
-# 4. Create your local environment file
-cp .env.example .env
-
-# 5. Open .env and add your GEMINI_API_KEY
+        │   └── AIReflectionView.tsx # 6-Persona multi-turn cognitive dialogue
+        ├── settings/
+        │   └── SettingsView.tsx  # Theme, preferences, webhooks & data export
+        └── timeline/
+            └── TimelineView.tsx  # Chronological & location reflection timeline
 ```
 
 ---
 
 ## Environment Variables
 
-Configure your `.env` file based on `.env.example`:
-
-| Variable | Required | Description | Example / Source |
-| :--- | :--- | :--- | :--- |
-| `GEMINI_API_KEY` | **Yes** | API key used for Gemini generation and fallback ladder | Generated in [Google AI Studio](https://aistudio.google.com/) |
-| `APP_URL` | No | Base URL where the application is hosted | Automatically set by Cloud Run runtime |
-| `PORT` | No | Server port (defaults to `3000`) | `3000` |
-| `NODE_ENV` | No | Node environment mode (`development` or `production`) | `production` |
-
-> **Security Note**: Never commit actual `.env` files or API keys to source control. Secret keys are managed dynamically in production via Google Cloud Secret Manager.
-
----
-
-## Development
-
-To start the full-stack development server with live reload and Vite middleware:
+Copy `.env.example` to `.env` or configure runtime environment secrets:
 
 ```bash
-npm run dev
+# Server-side Gemini API key (Required for AI features)
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Client-side Google Maps API key (For location search)
+VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
+
+# Firebase Configuration
+VITE_FIREBASE_API_KEY=your_firebase_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
 ```
 
-The application will be accessible at `http://localhost:3000`.
+---
+
+## Development Workflow
+
+1. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+2. **Start unified dev server**:
+   ```bash
+   npm run dev
+   ```
+   The dev server binds to `0.0.0.0:3000` with Express backend API routes and Vite frontend integration.
 
 ---
 
-## Linting and Type Checking
+## Verification & Quality Assurance
 
-Run the TypeScript type-checker to ensure zero syntax or compilation errors:
-
-```bash
-npm run lint
-```
-
-*(Executes `tsc --noEmit`)*
-
----
-
-## Testing & Functional Walkthrough
-
-To verify application stability across all user flows:
-
-| Test ID | Area | Action | Expected Outcome |
-| :--- | :--- | :--- | :--- |
-| **TC-01** | Backend Health | `GET /api/health` | HTTP 200 OK: `{ "success": true, "data": { "status": "healthy" } }` |
-| **TC-02** | Authentication | Click **Continue with Google** | Authenticates user via Google popup; isolated user document collection initialized. |
-| **TC-03** | Entry Creation | Click **+ New Reflection**, enter title and content, select mood, click **Save** | Entry persisted to `/users/{userId}/entries/{entryId}` in Firestore and synced to Dashboard. |
-| **TC-04** | AI Dialogue | Choose persona (e.g., **Socratic Explorer**) and send a message | Backend proxies prompt through Gemini fallback ladder; renders structured observation and question. |
-| **TC-05** | Executive Insights | Click **Generate Insights** on a reflection | Produces 2–3 sentence executive summary, emotional theme bars, and suggested action items. |
-| **TC-06** | Action Items | Click checkbox on an action item | Toggles completed state in Firestore and updates pending action counters. |
-| **TC-07** | Prompt Generator | Click **Inspire Me** -> **Refresh Prompts** | Fetches 4 customized reflective prompts with direct reflection starting shortcuts. |
-| **TC-08** | Data Export | In Settings, click **Export as Markdown** or **Export as JSON** | Triggers browser download of complete formatted journal archive. |
-| **TC-09** | Deletion | Click **Delete** on an entry and confirm | Removes document from `/users/{userId}/entries/{entryId}`. |
-
----
-
-## Production Build
-
-To build the client SPA and bundle the Express server into a standalone CommonJS package:
+Run type check and build verification:
 
 ```bash
 npm run build
 ```
 
-This compiles:
-1. Client assets into `dist/` via `vite build`
-2. Server backend into `dist/server.cjs` via `esbuild`
+---
 
-To launch the production server:
+## Testing & Functional Walkthrough
 
-```bash
-npm start
-```
+To verify all system features end-to-end:
+
+1. **Authentication**:
+   - Click "Sign In with Google" to authenticate into your isolated tenant partition.
+2. **Distraction-Free Journal & Location**:
+   - Click "+ New Reflection", type title/body, pick a mood (e.g., "Inspired"), and click "Add Location" to select a place (e.g., "Central Park Library").
+   - Click "Save Reflection" and verify the toast confirmation.
+3. **Temporal Timeline**:
+   - Navigate to "Timeline". Filter by mood and verify that the location badge is visible.
+4. **Cognitive AI Dialogue (6 Personas)**:
+   - Go to "AI Explorer", select "Perspective Shifter" or "Future Self", and click "Reflect on this entry".
+   - Notice the structured Observation, Question, and Next Step format.
+5. **Pattern Discovery**:
+   - Go to "Pattern Discovery" and click "Discover Patterns".
+   - Inspect synthesized themes and click "Add to Actions" on any recommended micro-step.
+6. **Executive Insights & Actions**:
+   - Navigate to "Insights & Actions", check off completed steps, and observe the streak score.
+7. **Webhooks & Observability**:
+   - Visit "Platform & Admin" to inspect live latency.
+   - Go to "Settings", enable Webhook Notifications, input a webhook URL, and click "Test Ping".
 
 ---
 
-## Deployment
+## Production Build
 
-### Step 1: Enable Google Cloud Services
+Compile the client SPA and bundled CommonJS server:
+
+```bash
+npm run build
+```
+
+Outputs:
+- `dist/` containing optimized static client assets.
+- `dist/server.cjs` containing the bundled standalone Node.js server.
+
+---
+
+## Google Cloud Run Deployment
+
+Deploy ReflectAI directly to Google Cloud Run with the required campaign verification label:
+
+### 1. Enable Required Cloud APIs
 
 ```bash
 gcloud services enable \
   run.googleapis.com \
-  artifactregistry.googleapis.com \
   secretmanager.googleapis.com \
-  firestore.googleapis.com
+  firestore.googleapis.com \
+  cloudbuild.googleapis.com
 ```
 
-### Step 2: Configure Secret Manager (Zero-Hardcoding)
+### 2. Configure Secret Manager for Gemini API Key
 
 ```bash
-# 1. Create the secret
+# Create and populate secret
 gcloud secrets create GEMINI_API_KEY --replication-policy="automatic"
-
-# 2. Add your secret payload
 echo -n "YOUR_GEMINI_API_KEY" | gcloud secrets versions add GEMINI_API_KEY --data-file=-
 
-# 3. Grant the Cloud Run runtime service account access
-PROJECT_NUMBER=$(gcloud projects describe $(gcloud config get-value project) --format="value(projectNumber)")
-
+# Grant Cloud Run service account access to read the secret
 gcloud secrets add-iam-policy-binding GEMINI_API_KEY \
-  --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+  --member="serviceAccount:YOUR_PROJECT_NUMBER-compute@developer.gserviceaccount.com" \
   --role="roles/secretmanager.secretAccessor"
 ```
 
-### Step 3: Deploy Firestore Security Rules
-
-Deploy the owner-isolated rules in `firestore.rules`:
+### 3. Deploy to Cloud Run
 
 ```bash
-firebase deploy --only firestore:rules
-```
-
-### Step 4: Deploy to Google Cloud Run
-
-Deploy directly from source using Google Cloud Buildpacks:
-
-```bash
-gcloud run deploy reflect-ai-app \
+gcloud run deploy reflectai \
   --source . \
   --region us-central1 \
   --allow-unauthenticated \
   --port 3000 \
   --set-secrets GEMINI_API_KEY=GEMINI_API_KEY:latest \
-  --set-env-vars NODE_ENV=production
+  --update-labels dev-tutorial=cloud-run-ai-challenge
 ```
 
-### Step 5: Apply Campaign Verification Label
+### 4. Verify Campaign Label
 
 ```bash
-gcloud run services update reflect-ai-app \
-  --update-labels=dev-tutorial=cloud-run-ai-challenge \
-  --region=us-central1
+gcloud run services describe reflectai \
+  --region us-central1 \
+  --format="value(metadata.labels)"
 ```
 
 ---
 
-## API & Backend Configuration
+## Database Architecture & Firestore Security Rules
 
-The Express backend routes are declared in `server.ts` and handle Gemini inference and health checks:
-
-- `GET /api/health` — Returns server health and timestamp.
-- `POST /api/gemini/reflect` — Multi-turn cognitive dialogue with persona instructions.
-- `POST /api/gemini/summarize` — Executive insight extraction and action suggestions.
-- `POST /api/gemini/prompts` — Dynamic reflective question generation.
-
-### Resilient Model Fallback Ladder
-
-To guarantee uninterrupted service, all Gemini calls use `generateContentWithFallback` traversing:
-1. `gemini-2.5-flash` (Primary fast model)
-2. `gemini-2.5-flash-lite` (High-availability fallback)
-3. `gemini-flash-latest` (Dynamic alias)
-4. `gemini-2.5-pro` (Deep reasoning fallback)
-
----
-
-## Database & Security Rules
-
-Cloud Firestore is configured with strict user-level tenancy under `/users/{userId}`.
+All Firestore documents enforce user-bound path isolation. Deploy the following security rules:
 
 ```javascript
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if false;
-    }
-
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    function isValidId(id) {
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
-    }
-
+    
+    // User Profile Document
     match /users/{userId} {
-      allow get: if isOwner(userId) && isValidId(userId);
-      allow create, update, delete: if isOwner(userId) && isValidId(userId);
-
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Journal Entries Subcollection
       match /entries/{entryId} {
-        allow list: if isOwner(userId);
-        allow get: if isOwner(userId) && isValidId(entryId);
-        allow create, update, delete: if isOwner(userId) && isValidId(entryId);
+        allow read, write: if request.auth != null && request.auth.uid == userId;
       }
-
+      
+      // Action Items Subcollection
       match /actions/{actionId} {
-        allow list: if isOwner(userId);
-        allow get: if isOwner(userId) && isValidId(actionId);
-        allow create, update, delete: if isOwner(userId) && isValidId(actionId);
+        allow read, write: if request.auth != null && request.auth.uid == userId;
       }
-
+      
+      // Reflection Patterns Subcollection
+      match /patterns/{patternId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      // External Integrations / Webhooks Subcollection
+      match /integrations/{integrationId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      // User Preferences Subcollection
       match /preferences/{prefId} {
-        allow list: if isOwner(userId);
-        allow get: if isOwner(userId) && isValidId(prefId);
-        allow create, update, delete: if isOwner(userId) && isValidId(prefId);
-      }
-
-      match /insights/{insightId} {
-        allow list: if isOwner(userId);
-        allow get: if isOwner(userId) && isValidId(insightId);
-        allow create, update, delete: if isOwner(userId) && isValidId(insightId);
+        allow read, write: if request.auth != null && request.auth.uid == userId;
       }
     }
   }
@@ -368,62 +315,20 @@ service cloud.firestore {
 
 ---
 
-## Threat Model & Security
+## Agentic Threat Model & OWASP Mitigations
 
-| Zone | Vulnerability Risk | Mitigating Countermeasure |
+| Threat Zone | Identified Risks | Countermeasures & Defenses |
 | :--- | :--- | :--- |
-| **1. Input Surfaces** | Prompt injection, payload buffer overflow | Request body size limits (10MB), defensive destructuring, client-side escaping. |
-| **2. Planning & Reasoning** | Persona hijacking, system override | Explicit system boundaries, validated JSON schema parsing for insights. |
-| **3. Tool Execution** | SSRF, privilege escalation | Zero dynamic code evaluation (`eval`); all outputs rendered as safe text/markdown. |
-| **4. Memory & State** | Cross-tenant data leakage | Firestore rules enforcing `request.auth.uid == userId` across all subcollections. |
-| **5. Inter-System Comm** | API key leaks | Secret Manager injection, server-side-only Gemini calls (`GEMINI_API_KEY`). |
+| **1. Input Surfaces** | Malicious prompt injection, oversized request bodies, XSS. | Top-level body parsing (10MB limit), strict schema validation, input sanitization, React DOM escaping. |
+| **2. Planning & Reasoning** | System instruction overrides, persona hijacking. | Strict system guardrails, schema enforcement, structured output parsing. |
+| **3. Tool Execution** | SSRF, privilege escalation, unverified API calls. | Strict webhook destination validation (HTTPS only), parameterized endpoints, no dynamic eval. |
+| **4. Memory & State** | Cross-tenant data snooping, unauthorized document reads. | Owner-bound security rules (`request.auth.uid == userId`) on all subcollections; zero wildcard defaults. |
+| **5. Inter-System Communication** | Gemini API key leakage, token exposure. | Secret Manager injection, server-side API proxying, zero hardcoded credentials in client bundles. |
 
 ---
 
 ## Troubleshooting
 
-- **Firestore Permission Errors (`Missing or insufficient permissions`)**:
-  - Ensure the user is signed in.
-  - Verify that `firestore.rules` is deployed and uses separate `allow list` and `allow get` clauses.
-- **Gemini API Error (`GEMINI_API_KEY is not set`)**:
-  - Check that `GEMINI_API_KEY` is present in your `.env` file locally or injected from Secret Manager in Cloud Run.
-- **Build Failure (`vite: not found` or `esbuild error`)**:
-  - Run `npm install` to ensure all build dependencies are present.
-- **Port Binding Issues in Container**:
-  - The server binds to host `0.0.0.0` and respects `process.env.PORT` (defaulting to `3000`).
-
----
-
-## Git Workflow
-
-```bash
-# 1. Create a feature branch
-git checkout -b feature/your-feature-name
-
-# 2. Make changes and verify
-npm run lint
-npm run build
-
-# 3. Commit changes
-git add .
-git commit -m "feat: description of your change"
-
-# 4. Push to remote
-git push -u origin feature/your-feature-name
-
-# 5. Open a Pull Request on GitHub
-```
-
----
-
-## Deployment Checklist
-
-- [x] Dependencies installed and locked
-- [x] Environment variables documented in `.env.example`
-- [x] TypeScript linting and type-check passes (`npm run lint`)
-- [x] Production build compiles cleanly (`npm run build`)
-- [x] Firestore security rules deployed and tenant-isolated
-- [x] Resilient Gemini model fallback ladder configured
-- [x] Zero hardcoded credentials in codebase
-- [x] Automated challenge label applied (`dev-tutorial=cloud-run-ai-challenge`)
-- [x] README.md updated with accurate configuration and commands
+- **Firestore Permission Denied**: Ensure `firestore.rules` is deployed and that the user is authenticated via Google Firebase Auth.
+- **Gemini API Errors**: The backend automatically falls back across `gemini-3.6-flash` ➔ `gemini-3.1-flash-lite` ➔ `gemini-flash-latest` ➔ `gemini-3.7-flash`. Ensure `GEMINI_API_KEY` is configured in your environment or Secret Manager.
+- **Port Ingress**: Ensure the server binds to `0.0.0.0:3000`.
