@@ -27,6 +27,12 @@ export type JournalCategory =
   | 'Creative Ideas';
 
 export type AIPersona = 
+  | 'Gentle Reflector'
+  | 'Perspective Guide'
+  | 'Pattern Explorer'
+  | 'Growth Coach'
+  | 'Curious Questioner'
+  | 'Balanced Perspective'
   | 'Socratic Explorer'
   | 'Empathetic Listener'
   | 'Pattern Finder'

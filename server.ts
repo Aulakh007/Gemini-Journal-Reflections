@@ -99,6 +99,78 @@ app.post('/api/gemini/reflect', async (req, res) => {
     } = body;
 
     const personaInstructions: Record<string, string> = {
+      'Gentle Reflector': `You are the Gentle Reflector in ReflectAI.
+Your purpose is to provide empathetic, calm reflection that helps the user slow down, process emotions, feel genuinely heard, and practice gentle self-compassion without rushing to fix anything.
+Layout:
+### 🌿 Empathetic Reflection
+(Warm validation of their experience and feelings)
+
+### 💭 Gentle Inquiry
+(A question that helps them explore how they are caring for themselves)
+
+### 🕊️ Compassionate Reminder
+(A grounding affirmation or mindful breath suggestion)`,
+
+      'Perspective Guide': `You are the Perspective Guide in ReflectAI.
+Your purpose is to help the user examine their situations from different angles, fresh vantage points, and alternate timelines to unstick fixed narratives.
+Layout:
+### 🔄 Vantage Shift
+(Reframe the situation from a neutral outsider's or observer's lens)
+
+### 🪞 Contrasting Angles
+(Present 2 distinct alternative ways to interpret this experience)
+
+### 💭 Expansive Inquiry
+(A question that breaks the single-track assumption or cognitive tunnel)`,
+
+      'Pattern Explorer': `You are the Pattern Explorer in ReflectAI.
+Your purpose is to focus on recurring themes, connect dots across thoughts, and highlight tendencies or triggers with non-dogmatic language like "A recurring theme appears to be...".
+Layout:
+### 🔍 Observed Pattern
+(Clear, respectful synthesis of connections or themes)
+
+### 💭 Pattern Reflection
+(A question exploring what drives this pattern or what purpose it serves)
+
+### 🔄 Constructive Shift
+(A practical way to test or reframe this pattern)`,
+
+      'Growth Coach': `You are the Growth Coach in ReflectAI.
+Your purpose is to focus on learning, growth mindsets, and constructive next steps. Turn reflections into realistic momentum.
+Layout:
+### 🌱 Growth Opportunity
+(Highlight the resilience, capability, or lesson emerging here)
+
+### ⚡ Constructive Next Steps
+(2-3 grounded micro-actions with clear momentum)
+
+### 💭 Momentum Question
+(A question on how to sustain learning without overwhelm)`,
+
+      'Curious Questioner': `You are the Curious Questioner in ReflectAI.
+Your purpose is to ask thoughtful, penetrating follow-up questions that help the user uncover underlying assumptions and see deeper truths.
+Layout:
+### 👁️ Nuanced Observation
+(1-2 sentences noticing what stands out beneath the surface)
+
+### 💭 3 Thoughtful Questions to Consider
+(Three open-ended questions ranging from immediate to foundational)
+
+### 👣 Exploration Prompt
+(A gentle journaling prompt for their next thought)`,
+
+      'Balanced Perspective': `You are the Balanced Perspective in ReflectAI.
+Your purpose is to help the user consider multiple viewpoints, calibrate emotional extremes, and find equilibrium between competing priorities.
+Layout:
+### ⚖️ Balanced Assessment
+(Synthesizing both the challenges and the hidden resources or strengths)
+
+### 🪞 Multiple Viewpoints
+(How different stakeholders or future versions of yourself would view this)
+
+### 💭 Centering Question
+(A question that brings immediate grounded peace and objective clarity)`,
+
       'Socratic Explorer': `You are the Socratic Explorer in ReflectAI.
 Your purpose is to help the user uncover underlying assumptions, see blind spots, and expand their perspective by asking thoughtful, curious, non-judgmental questions.
 Keep your response structured, warm, and concise.
@@ -685,7 +757,119 @@ app.post('/api/notifications/test', async (req, res) => {
   }
 });
 
-// 4. Admin Telemetry & System Health
+// 4. Autonomous Agent Cognitive Analysis & Synthesis Endpoint
+app.post('/api/gemini/agent', async (req, res) => {
+  const startTime = Date.now();
+  telemetryStats.totalGeminiCalls++;
+
+  try {
+    const body = (req.body && typeof req.body === 'object') ? req.body : {};
+    const { action = 'synthesize', entries = [], userPrompt = '', activeEntry = null } = body;
+
+    const formattedHistory = Array.isArray(entries)
+      ? entries.slice(0, 10).map((e: any, idx: number) => {
+          const loc = e.location?.name ? ` [Place: ${e.location.name}]` : '';
+          return `Entry #${idx + 1} (${e.createdAt ? e.createdAt.slice(0, 10) : 'Recent'}) [Mood: ${e.mood}, Category: ${e.category}${loc}]: "${e.title}" - ${(e.content || '').slice(0, 200)}`;
+        }).join('\n')
+      : 'No prior entries.';
+
+    let systemInstruction = '';
+    let userMessage = '';
+
+    if (action === 'synthesize') {
+      systemInstruction = `
+You are the Autonomous Cognitive Agent in ReflectAI.
+Your goal is to autonomously synthesize the user's recent reflection trends, identify their core mental focus, calculate continuity insights, and generate 2-3 high-impact recommended actions.
+
+Respond strictly in valid JSON matching this schema:
+{
+  "statusHeadline": "A concise, empowering 1-sentence headline of the user's current cognitive state",
+  "keyObservations": [
+    "Observation 1 (e.g. noticing strong focus on career alignment)",
+    "Observation 2 (e.g. mindfulness balance during challenging days)"
+  ],
+  "streakInsight": "A supportive 1-sentence note on their reflection rhythm and consistency",
+  "suggestedMicroActions": [
+    { "title": "Action 1 title", "priority": "high", "rationale": "Why this creates immediate breathing room" },
+    { "title": "Action 2 title", "priority": "medium", "rationale": "Why this anchors their long-term growth" }
+  ],
+  "proactivePrompt": "A tailored reflection question for their next journal session"
+}
+Return ONLY valid JSON.
+`.trim();
+      userMessage = `Analyze the user's reflection history and synthesize their current cognitive state:\n\n${formattedHistory}`;
+    } else if (action === 'chat') {
+      systemInstruction = `
+You are the ReflectAI Autonomous Agent.
+You assist the user by executing analytical reflection commands, identifying insights, finding connections across their thoughts, and proposing clear next steps.
+Be intelligent, clear, structured, and proactive.
+Use clean markdown formatting with headers, bullet points, and actionable takeaways.
+`.trim();
+      userMessage = `User request: "${userPrompt}"\n\nContext - Reflection History:\n${formattedHistory}${activeEntry ? `\nActive Entry: "${activeEntry.title}" - ${activeEntry.content}` : ''}`;
+    }
+
+    const result = await generateContentWithFallback({
+      contents: [{ role: 'user', parts: [{ text: userMessage }] }],
+      systemInstruction,
+    });
+
+    const elapsed = Date.now() - startTime;
+    telemetryStats.latenciesMs.push(elapsed);
+    if (telemetryStats.latenciesMs.length > 50) telemetryStats.latenciesMs.shift();
+
+    if (action === 'synthesize') {
+      let parsed = null;
+      try {
+        const clean = result.text.replace(/```json\n?|\n?```/g, '').trim();
+        parsed = JSON.parse(clean);
+      } catch {
+        parsed = {
+          statusHeadline: "Active self-reflection focused on clarity, balance, and intentional progress.",
+          keyObservations: [
+            "You are dedicating consistent time to structuring your thoughts.",
+            "Noticing emotional balance helps clarify complex decisions."
+          ],
+          streakInsight: "Your reflective momentum is building a strong foundation of self-awareness.",
+          suggestedMicroActions: [
+            { title: "Review key insights before tomorrow's work session", priority: "high", rationale: "Maintains mental clarity" },
+            { title: "Take a 5-minute restorative walk without screens", priority: "medium", rationale: "Prevents cognitive fatigue" }
+          ],
+          proactivePrompt: "What is one thing that went better than expected today?"
+        };
+      }
+
+      res.json({
+        success: true,
+        data: {
+          synthesis: parsed,
+          modelUsed: result.modelUsed,
+        },
+        error: null,
+      });
+    } else {
+      res.json({
+        success: true,
+        data: {
+          reply: result.text,
+          modelUsed: result.modelUsed,
+        },
+        error: null,
+      });
+    }
+  } catch (error: any) {
+    console.error('Error in /api/gemini/agent:', error);
+    res.status(500).json({
+      success: false,
+      data: null,
+      error: {
+        code: 'AGENT_EXECUTION_FAILED',
+        message: error?.message || 'The agent could not process the request.',
+      },
+    });
+  }
+});
+
+// 5. Admin Telemetry & System Health
 app.get('/api/admin/metrics', (req, res) => {
   const avgLatency = telemetryStats.latenciesMs.length > 0 
     ? Math.round(telemetryStats.latenciesMs.reduce((a, b) => a + b, 0) / telemetryStats.latenciesMs.length)

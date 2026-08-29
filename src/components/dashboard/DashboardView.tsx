@@ -40,12 +40,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onNavigateTab,
   onToggleAction,
 }) => {
-  // Dynamic Greeting based on time of day
+  // Dynamic Greeting based on the user's actual browser/device local time:
+  // 5:00 AM – 11:59 AM (hours 5 to 11) → "Good Morning"
+  // 12:00 PM – 4:59 PM (hours 12 to 16) → "Good Afternoon"
+  // 5:00 PM – 11:59 PM (hours 17 to 23) → "Good Evening"
+  // 12:00 AM – 4:59 AM (hours 0 to 4) → "Good Morning"
+  // IMPORTANT: Never use "Good Night".
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
+    if (hour >= 12 && hour < 17) {
+      return 'Good Afternoon';
+    }
+    if (hour >= 17 && hour <= 23) {
+      return 'Good Evening';
+    }
+    return 'Good Morning';
   };
 
   const displayName = user?.displayName ? user.displayName.split(' ')[0] : 'there';

@@ -534,6 +534,7 @@ export default function App() {
       {activeTab === 'reflections' && (
         <AIReflectionView
           activeEntry={activeEditingEntry || (entries.length > 0 ? entries[0] : null)}
+          allEntries={entries}
           onSaveEntryMessages={handleSaveEntryMessages}
           onAddActionItem={(title, priority) => handleAddActionItem(title, priority)}
           onBackToJournal={activeEditingEntry ? () => setActiveTab('journal') : undefined}
