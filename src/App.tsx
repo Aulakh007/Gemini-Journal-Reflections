@@ -539,6 +539,7 @@ export default function App() {
           onAddActionItem={(title, priority) => handleAddActionItem(title, priority)}
           onBackToJournal={activeEditingEntry ? () => setActiveTab('journal') : undefined}
           defaultPersona={preferences.defaultPersona}
+          defaultAgentType={preferences.defaultAgentType || 'explore'}
         />
       )}
 

@@ -28,11 +28,11 @@ export const WalkthroughGuideModal: React.FC<WalkthroughGuideModalProps> = ({ is
     },
     {
       step: '3',
-      title: 'Engage with 6 Specialized AI Personas',
+      title: 'Agent Type: Autonomous Agent & AI Explore (6 Personas)',
       icon: Brain,
       color: 'bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 border-purple-200/60 dark:border-purple-800/60',
-      description: 'Choose between 6 distinct cognitive guides: Socratic Explorer, Empathetic Listener, Pattern Finder, Practical Coach, Perspective Shifter, or Future Self.',
-      testHint: 'In the AI Explorer tab, pick "Perspective Shifter" or "Future Self" and submit a reflection prompt. Verify structured, compassionate guidance.'
+      description: 'Switch between the proactive Autonomous Agent (pulse tracking & micro-action synthesis) and AI Explore (interactive dialogue across 6 specialized philosophical personas: Gentle Reflector, Perspective Guide, Pattern Explorer, Growth Coach, Curious Questioner, Balanced Perspective).',
+      testHint: 'In the AI Explorer tab, toggle between "Agent" and "AI Explore" in the Agent Type section, switch between personas, and execute dialogues.'
     },
     {
       step: '4',

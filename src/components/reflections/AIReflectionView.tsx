@@ -37,6 +37,7 @@ interface AIReflectionViewProps {
   onAddActionItem: (title: string, priority: 'low' | 'medium' | 'high') => Promise<void>;
   onBackToJournal?: () => void;
   defaultPersona?: AIPersona;
+  defaultAgentType?: 'agent' | 'explore';
 }
 
 export const AIReflectionView: React.FC<AIReflectionViewProps> = ({
@@ -46,9 +47,10 @@ export const AIReflectionView: React.FC<AIReflectionViewProps> = ({
   onAddActionItem,
   onBackToJournal,
   defaultPersona = 'Gentle Reflector',
+  defaultAgentType = 'explore',
 }) => {
   // Mode toggle: 'agent' | 'explore'
-  const [activeMode, setActiveMode] = useState<'agent' | 'explore'>('explore');
+  const [activeMode, setActiveMode] = useState<'agent' | 'explore'>(defaultAgentType);
   const [selectedPersona, setSelectedPersona] = useState<AIPersona>(defaultPersona);
   const [conversation, setConversation] = useState<ChatMessage[]>(activeEntry?.messages || []);
   const [inputPrompt, setInputPrompt] = useState('');
@@ -327,7 +329,7 @@ export const AIReflectionView: React.FC<AIReflectionViewProps> = ({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Header & Mode Switcher Bar */}
+      {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-3 border-b border-stone-200/60 dark:border-zinc-800/60">
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -340,13 +342,13 @@ export const AIReflectionView: React.FC<AIReflectionViewProps> = ({
               </button>
             )}
 
-            {/* Segmented Mode Selector */}
+            {/* Quick Segmented Mode Selector */}
             <div className="inline-flex p-1 rounded-xl bg-stone-100 dark:bg-zinc-800/80 border border-stone-200/70 dark:border-zinc-700/60">
               <button
                 id="mode-agent-btn"
                 type="button"
                 onClick={() => setActiveMode('agent')}
-                className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                   activeMode === 'agent'
                     ? 'bg-white dark:bg-zinc-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
                     : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'
@@ -360,7 +362,7 @@ export const AIReflectionView: React.FC<AIReflectionViewProps> = ({
                 id="mode-explore-btn"
                 type="button"
                 onClick={() => setActiveMode('explore')}
-                className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                   activeMode === 'explore'
                     ? 'bg-white dark:bg-zinc-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
                     : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'
@@ -397,6 +399,105 @@ export const AIReflectionView: React.FC<AIReflectionViewProps> = ({
             )}
           </div>
         )}
+      </div>
+
+      {/* Agent Type Selector Section */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-zinc-400 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+            <span>Agent Type</span>
+          </label>
+          <span className="text-[11px] text-stone-400 dark:text-zinc-500">
+            {activeMode === 'agent' ? 'Autonomous cognitive processing' : 'Interactive guided exploration'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Agent Option (Left) */}
+          <button
+            id="agent-type-agent-btn"
+            type="button"
+            onClick={() => setActiveMode('agent')}
+            className={`p-4 rounded-2xl text-left border transition-all relative overflow-hidden group cursor-pointer ${
+              activeMode === 'agent'
+                ? 'bg-white dark:bg-[#1C1C1F] border-indigo-600 dark:border-indigo-400 ring-2 ring-indigo-500/20 shadow-xs'
+                : 'bg-white/70 dark:bg-[#1C1C1F]/60 border-stone-200/80 dark:border-zinc-800 hover:border-stone-300 dark:hover:border-zinc-700 hover:bg-stone-50/50 dark:hover:bg-zinc-800/40'
+            }`}
+          >
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
+                    activeMode === 'agent'
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'bg-stone-100 dark:bg-zinc-800 text-stone-600 dark:text-stone-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'
+                  }`}
+                >
+                  <Bot className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-stone-900 dark:text-white flex items-center gap-2">
+                    Agent
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60">
+                      Autonomous
+                    </span>
+                  </h3>
+                </div>
+              </div>
+              {activeMode === 'agent' && (
+                <div className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center shrink-0">
+                  <Check className="w-3 h-3" />
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+              Synthesizes longitudinal reflection trends, tracks cognitive rhythm, and proactively drafts high-impact micro-actions.
+            </p>
+          </button>
+
+          {/* AI Explore Option (Right) */}
+          <button
+            id="agent-type-explore-btn"
+            type="button"
+            onClick={() => setActiveMode('explore')}
+            className={`p-4 rounded-2xl text-left border transition-all relative overflow-hidden group cursor-pointer ${
+              activeMode === 'explore'
+                ? 'bg-white dark:bg-[#1C1C1F] border-indigo-600 dark:border-indigo-400 ring-2 ring-indigo-500/20 shadow-xs'
+                : 'bg-white/70 dark:bg-[#1C1C1F]/60 border-stone-200/80 dark:border-zinc-800 hover:border-stone-300 dark:hover:border-zinc-700 hover:bg-stone-50/50 dark:hover:bg-zinc-800/40'
+            }`}
+          >
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
+                    activeMode === 'explore'
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'bg-stone-100 dark:bg-zinc-800 text-stone-600 dark:text-stone-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'
+                  }`}
+                >
+                  <Compass className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-stone-900 dark:text-white flex items-center gap-2">
+                    AI Explore
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/60">
+                      Multi-Turn Dialogue
+                    </span>
+                  </h3>
+                </div>
+              </div>
+              {activeMode === 'explore' && (
+                <div className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center shrink-0">
+                  <Check className="w-3 h-3" />
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+              Engage in multi-turn philosophical, empathetic, and coaching exploration with 6 specialized cognitive personas.
+            </p>
+          </button>
+        </div>
       </div>
 
       {/* ========================================================= */}

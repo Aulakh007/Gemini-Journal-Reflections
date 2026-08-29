@@ -164,9 +164,12 @@ export interface NotificationWebhookConfig {
   lastTestStatus?: 'success' | 'failed';
 }
 
+export type AgentType = 'agent' | 'explore';
+
 export interface UserPreferences {
   theme: 'light' | 'dark' | 'system';
   defaultPersona: AIPersona;
+  defaultAgentType?: AgentType;
   defaultMood: JournalMood;
   reduceMotion: boolean;
   autoSaveIntervalMs: number;

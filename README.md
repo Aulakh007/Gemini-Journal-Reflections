@@ -39,30 +39,82 @@ A secure, production-grade personal journaling and cognitive reflection intellig
 
 ## Architecture & Key Capabilities
 
-1. **Distraction-Free Journaling with Optional Location Anchoring**:
+1. **Agent Type: Dual Intelligence Architecture (Agent & AI Explore)**:
+   - **Agent Mode (Autonomous)**: Proactively synthesizes longitudinal reflection trends, tracks cognitive rhythm/streaks, drafts high-impact micro-actions, and provides an interactive autonomous command workspace.
+   - **AI Explore Mode (Interactive Dialogue)**: Provides structured, multi-turn inquiry with 6 specialized philosophical and coaching personas tailored for reflective inquiry and cognitive reframing.
+2. **Distraction-Free Journaling with Optional Location Anchoring**:
    - Clean, high-contrast writing environment with mood indicators and tag manager.
    - Privacy-conscious location selection (Cafe, Park, Studio, Home) via Google Maps Platform Places search without background GPS snooping.
-2. **Interactive Temporal & Environmental Timeline**:
+3. **Interactive Temporal & Environmental Timeline**:
    - Chronological reflection stream grouped by date.
    - Filter by mood, search query, or entries with attached location environments.
-3. **6 Guided Cognitive AI Personas**:
-   - *Socratic Explorer*: Uncovers underlying assumptions and questions blind spots.
-   - *Empathetic Listener*: Validates emotions and fosters self-compassion.
-   - *Pattern Finder*: Highlights recurring triggers and behavioral habits.
-   - *Practical Coach*: Deconstructs thoughts into immediate, grounded micro-steps.
-   - *Perspective Shifter*: Reframes situations from outside stakeholder and inverted lenses.
-   - *Future Self*: Provides long-term horizon clarity from 5–10 years in the future.
-4. **Longitudinal Pattern Discovery**:
+4. **6 Guided Cognitive AI Personas (AI Explore)**:
+   - *Gentle Reflector / Empathetic Listener*: Validates emotions and fosters self-compassion without rushing to fix.
+   - *Perspective Guide / Perspective Shifter*: Reframes situations from outside stakeholder and inverted lenses.
+   - *Pattern Explorer / Pattern Finder*: Highlights recurring triggers, emotional loops, and behavioral habits.
+   - *Growth Coach / Practical Coach*: Deconstructs thoughts into immediate, grounded micro-steps.
+   - *Curious Questioner / Socratic Explorer*: Uncovers underlying assumptions and reveals cognitive blind spots.
+   - *Balanced Perspective / Future Self*: Provides long-term horizon clarity and balanced cognitive equilibrium.
+5. **Longitudinal Pattern Discovery**:
    - Synthesizes recurring cognitive cycles, emotional trajectories, and environmental habits.
    - Grounded in concrete evidence with reflection counts, date ranges, and 1-click micro-actions.
-5. **Executive Synthesis & Emotional Balance Analysis**:
+6. **Executive Synthesis & Emotional Balance Analysis**:
    - Generates structured executive summaries and emotional theme distribution scores (0–100%).
-6. **External Webhook Notifications (Slack / Discord / Custom)**:
+7. **External Webhook Notifications (Slack / Discord / Custom)**:
    - Configurable webhook dispatch with privacy mode options (Minimal Metadata vs Full Summary).
-7. **Platform Observability & System Health**:
+8. **Platform Observability & System Health**:
    - Real-time uptime telemetry, Gemini API latency tracker, model fallback ladder, and RBAC isolation validator.
-8. **Data Portability & Zero-Leakage Privacy**:
+9. **Data Portability & Zero-Leakage Privacy**:
    - 1-click full export to Markdown (`.md`) and JSON (`.json`), plus secure single-click data wipe.
+
+---
+
+## Agent Type: Agent vs. AI Explore
+
+ReflectAI provides a dedicated **Agent Type** selector allowing users to switch between autonomous synthesis and interactive conversational exploration.
+
+```text
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                                       AGENT TYPE                                       │
+├───────────────────────────────────────────┬────────────────────────────────────────────┤
+│ 🤖 Agent (Autonomous Mode)                 │ 🧭 AI Explore (Interactive Dialogue)       │
+├───────────────────────────────────────────┼────────────────────────────────────────────┤
+│ • Proactive cognitive stream synthesis    │ • Multi-turn inquiry with 6 AI personas    │
+│ • Longitudinal rhythm & pulse tracking    │ • Context-grounded reflection dialogue     │
+│ • Automated micro-action recommendations  │ • 1-Click micro-action item extraction     │
+│ • Autonomous command execution workspace  │ • Tailored emotional & cognitive reframing │
+└───────────────────────────────────────────┴────────────────────────────────────────────┘
+```
+
+### What AI Explore Does
+**AI Explore** enables intentional, deep-dive multi-turn inquiry. When in AI Explore mode, users can:
+- Select from 6 specialized reflection personas (Gentle Reflector, Perspective Guide, Pattern Explorer, Growth Coach, Curious Questioner, Balanced Perspective).
+- Engage in a focused conversational thread grounded in an active reflection or open inquiry.
+- Receive structured multi-part responses formatted with clear **Observations**, **Socratic Questions**, and **Next Steps**.
+- Click **"Add to Action Plan"** directly on any suggested micro-step to sync it immediately to Firestore action tracking.
+- Copy individual AI responses to clipboard with 1 click.
+
+### How Users Select AI Explore
+Users can activate AI Explore through three methods:
+1. **Agent Type Section**: In the AI Explorer view, click the **AI Explore** card (located on the right side next to the Agent option).
+2. **Top Header Segmented Toggle**: Click the **AI Explore** button (`#mode-explore-btn`) in the mode bar.
+3. **Application Preferences**: Navigate to **Settings > Application Preferences** and set **Default Agent Type** to **AI Explore**.
+
+### Comparison: Agent Mode vs. AI Explore Mode
+
+| Dimension | 🤖 Agent Mode | 🧭 AI Explore Mode |
+| :--- | :--- | :--- |
+| **Primary Focus** | Longitudinal pattern synthesis & cognitive pulse | Deep-dive conversational inquiry & reframing |
+| **Interaction Model** | Autonomous background stream analysis & direct commands | Interactive, multi-turn conversational dialogue |
+| **Persona Specialization**| Unified autonomous executive agent | 6 tailored philosophical & coaching personas |
+| **Output Format** | Executive status headlines, streak insights, micro-actions | Structured reflections (Observations, Questions, Next Steps) |
+| **Trigger Mechanism** | Auto-synthesized or triggered via "Re-Analyze Stream" | Real-time chat input or predefined prompt chips |
+| **Action Extraction** | 1-Click "Add to Actions" from recommended agent actions | 1-Click "Add to Action Plan" from dialogue response steps |
+
+### Configuration & Environment Variables
+Both modes utilize the server-side Gemini API proxy:
+- **`GEMINI_API_KEY`**: Server-side Google Gemini API key.
+- **Resilient Fallback Ladder**: Automatically cascades through `gemini-3.6-flash` ➔ `gemini-3.1-flash-lite` ➔ `gemini-flash-latest` ➔ `gemini-3.7-flash` upon transient rate limits or outages.
 
 ---
 

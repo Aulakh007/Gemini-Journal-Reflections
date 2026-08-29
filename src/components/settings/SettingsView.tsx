@@ -19,7 +19,9 @@ import {
   Bell,
   Send,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Bot,
+  Compass
 } from 'lucide-react';
 import type { 
   UserProfile, 
@@ -288,6 +290,40 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <option key={p} value={p}>{p}</option>
               ))}
             </select>
+          </div>
+
+          {/* Default Agent Type Option */}
+          <div className="p-4 rounded-xl bg-stone-50 dark:bg-zinc-900/60 border border-stone-100 dark:border-zinc-800 space-y-1.5">
+            <p className="text-xs font-semibold text-stone-800 dark:text-stone-200">Default Agent Type</p>
+            <div className="grid grid-cols-2 gap-2 pt-0.5">
+              <button
+                type="button"
+                id="settings-agent-type-agent-btn"
+                onClick={() => onUpdatePreferences({ defaultAgentType: 'agent' })}
+                className={`px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  (preferences.defaultAgentType || 'explore') === 'agent'
+                    ? 'bg-white dark:bg-[#1C1C1F] text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400 shadow-2xs font-semibold'
+                    : 'bg-white/60 dark:bg-zinc-800/60 text-stone-600 dark:text-stone-400 border-stone-200 dark:border-zinc-700 hover:text-stone-900 dark:hover:text-white'
+                }`}
+              >
+                <Bot className="w-3.5 h-3.5" />
+                <span>Agent</span>
+              </button>
+
+              <button
+                type="button"
+                id="settings-agent-type-explore-btn"
+                onClick={() => onUpdatePreferences({ defaultAgentType: 'explore' })}
+                className={`px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  (preferences.defaultAgentType || 'explore') === 'explore'
+                    ? 'bg-white dark:bg-[#1C1C1F] text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400 shadow-2xs font-semibold'
+                    : 'bg-white/60 dark:bg-zinc-800/60 text-stone-600 dark:text-stone-400 border-stone-200 dark:border-zinc-700 hover:text-stone-900 dark:hover:text-white'
+                }`}
+              >
+                <Compass className="w-3.5 h-3.5" />
+                <span>AI Explore</span>
+              </button>
+            </div>
           </div>
 
           {/* Default Reflection Mood */}
